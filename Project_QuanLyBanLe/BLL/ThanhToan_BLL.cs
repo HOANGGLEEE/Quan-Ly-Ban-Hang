@@ -1,0 +1,62 @@
+﻿using DAL;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BLL
+{
+    public class ThanhToan_BLL
+    {
+        private readonly ThanhToan_DAL _DAL;
+
+        public ThanhToan_BLL(IConfiguration configuration)
+        {
+            _DAL = new ThanhToan_DAL(configuration);
+        }
+
+        public DataTable getAll()
+        {
+            return _DAL.getAll();
+        }
+        public DataTable GetById(string ma)
+        {
+            return _DAL.GetById(ma);
+        }
+        public DataTable Delete(string ma)
+        {
+            return _DAL.Delete(ma);
+        }
+        public DataTable Update(Models.ThanhToan model)
+        {
+            return _DAL.Update(model);
+        }
+        public DataTable Create(Models.ThanhToan model)
+        {
+            return _DAL.Create(model);
+        }
+        public DataTable GetHoaDonChuaThanhToan()
+        {
+            return _DAL.GetHoaDonChuaThanhToan();
+        }
+        public bool UpdateTrangThaiThanhToan(string maHDBan, string phuongThuc)
+        {
+            return _DAL.UpdateTrangThaiThanhToan(maHDBan, phuongThuc);
+        }
+        public DataTable GetHoaDonChuaThanhToanTheoTen(string tenKh)
+        {
+            return _DAL.GetHoaDonChuaThanhToanTheoTen(tenKh);
+        }
+        public DataTable GetByHoaDon(string maHDBan)
+        {
+            return _DAL.GetByHoaDon(maHDBan);
+        }
+        public DataTable ResetSoTienByHoaDon(string maHDBan, decimal soTienMoi = 0)
+        {
+            return _DAL.ResetSoTienByHoaDon(maHDBan, soTienMoi);
+        }
+    }
+}

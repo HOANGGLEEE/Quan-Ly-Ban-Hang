@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="dahApp">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý khuyến mãi - DAH</title>
+  <link rel="stylesheet" href="../style/QuanLyKhuyenMai.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+  <script src="../angular/angular.min.js"></script>
+  <script src="../script/login.js"></script>
+  <script src="../script/auth.js"></script>
+  <script defer src="../script/QuanLyKhuyenMai.js"></script>
+</head>
+<body ng-controller="KhuyenMaiCtrl as vm">
+  <div class="warp">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">DAH</div>
+        <div><div>Quản lý bán lẻ và kho DAH</div></div>
+      </div>
+
+      <nav class="nav">
+        <div class="section-title">ADMIN</div>
+        <a href="QuanLyTaiKhoan.html">🛠️ Quản lý tài khoản</a>
+        <a href="QuanLyNhanVien.html">🧑‍💼 Quản lý nhân viên</a>
+        <a href="QuanLyKhuyenMai.html" class="active">🎁 Quản lý khuyến mãi</a>
+
+        <div class="section-title" style="margin-top:20px;font-weight:700;">Kế toán</div>
+        <a href="../pages/QuanLyCongNo.html">🧾 Quản lý công nợ</a>
+        <a href="../pages/BaoCaoThongKe.html">📊 Báo cáo thống kê</a>
+
+        <div class="section-title">THU NGÂN</div>
+        <a href="QuanLyBanHang.html">🧾 QUẢN LÝ BÁN HÀNG</a>
+        <a href="XuLyDoiTra.html">🔁 XỬ LÝ ĐỔI TRẢ</a>
+
+        <div class="section-title" style="margin-top:20px;font-weight:700;">Thủ kho</div>
+        <a href="QuanLyDanhMuc.html">📦 Quản lý Danh mục</a>
+        <a href="QuanLySanPham.html">📦 Quản lý Sản phẩm</a>
+        <a href="QuanLyNhapKho.html">📦 Quản lý Nhập kho</a>
+        <a href="QuanLyTonKho.html">📦 Quản lý Tồn kho</a>
+      </nav>
+
+      <div class="section-title">Tài khoản</div>
+      <div class="quick-stats">
+        <div class="row" style="justify-content:space-between">
+          <span>Người dùng:</span><strong>{{ vm.currentUser }}</strong>
+        </div>
+      </div>
+      <div class="small muted">© DAH</div>
+      <div class="logout">
+        <a href="index.html">Đăng xuất <i class="fa-solid fa-right-from-bracket"></i></a>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="header">
+        <div>
+          <div class="breadcrumbs">ADMIN / Quản lý khuyến mãi</div>
+          <h1 class="h1">QUẢN LÝ KHUYẾN MÃI</h1>
+        </div>
+        <div class="actions"><div class="pill">Ngôn ngữ: VN</div></div>
+      </div>
+
+      <!-- Danh sách -->
+      <section class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 class="h2">Danh sách khuyến mãi</h2>
+          <div class="row" style="gap:10px;flex:1;justify-content:flex-end">
+            <input class="input" ng-model="vm.searchText" placeholder="Tìm theo MAKM, TENKM, MASP..." style="max-width:320px" />
+            <a class="btn" href ng-click="vm.openAdd()">+ Thêm khuyến mãi</a>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>MAKM</th>
+                <th>TENKM</th>
+                <th>MASP</th>
+                <th>NGAYBATDAU</th>
+                <th>NGAYKETTHUC</th>
+                <th style="width:160px">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-if="!(vm.filtered && vm.filtered.length)">
+                <td colspan="6" style="text-align:center">Không có dữ liệu</td>
+              </tr>
+              <tr ng-repeat="k in (vm.filtered = (vm.list | filter:vm.searchFilter)) | limitTo: vm.kmPerPage : (vm.page-1)*vm.kmPerPage track by k.maKM">
+                <td>{{ k.maKM }}</td>
+                <td>{{ k.tenKM }}</td>
+                <td>{{ k.maSP }}</td>
+                <td>{{ vm.toVN(k.ngayBD) }}</td>
+                <td>{{ vm.toVN(k.ngayKT) }}</td>
+                <td class="action-buttons">
+                  <button class="icon-btn edit" title="Sửa" ng-click="vm.openEdit(k)"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <button class="icon-btn delete" title="Xóa" ng-click="vm.confirmDelete(k)"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div id="km-pagination" style="margin-top:10px" ng-if="vm.filtered.length">
+          <button ng-disabled="vm.page===1" ng-click="vm.page=vm.page-1">«</button>
+          <button ng-repeat="p in vm.pages()" ng-class="{active: vm.page===p}" ng-click="vm.page=p">{{p}}</button>
+          <button ng-disabled="vm.page===vm.totalPages()" ng-click="vm.page=vm.page+1">»</button>
+        </div>
+      </section>
+
+      <!-- Modal Thêm -->
+      <div id="kmAddModal" class="modal" ng-show="vm.modalAdd">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Thêm khuyến mãi</h3>
+            <button class="close" ng-click="vm.closeAdd()">×</button>
+          </div>
+          <form ng-submit="vm.create()">
+            <div class="row form-grid">
+              <div>
+                <label class="small muted">MAKM *</label>
+                <input class="input" ng-model="vm.add.maKM" placeholder="VD: KM001" required />
+              </div>
+              <div>
+                <label class="small muted">TENKM *</label>
+                <input class="input" ng-model="vm.add.tenKM" placeholder="VD: Giảm 20% 2/9" required />
+              </div>
+              <div>
+                <label class="small muted">MASP *</label>
+                <input class="input" ng-model="vm.add.maSP" placeholder="VD: SP001" required />
+              </div>
+              <div>
+                <label class="small muted">NGAYBATDAU *</label>
+                <input type="date" class="input" ng-model="vm.add._start" required />
+              </div>
+              <div>
+                <label class="small muted">NGAYKETTHUC *</label>
+                <input type="date" class="input" ng-model="vm.add._end" required />
+              </div>
+            </div>
+            <div class="row" style="gap:10px;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="btn secondary" ng-click="vm.closeAdd()">Hủy</button>
+              <button type="submit" class="btn">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Sửa -->
+      <div id="kmEditModal" class="modal" ng-show="vm.modalEdit">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Sửa khuyến mãi</h3>
+            <button class="close" ng-click="vm.closeEdit()">×</button>
+          </div>
+          <form ng-submit="vm.update()">
+            <div class="row form-grid">
+              <div>
+                <label class="small muted">MAKM *</label>
+                <input class="input" ng-model="vm.edit.maKM" readonly />
+              </div>
+              <div>
+                <label class="small muted">TENKM *</label>
+                <input class="input" ng-model="vm.edit.tenKM" required />
+              </div>
+              <div>
+                <label class="small muted">MASP *</label>
+                <input class="input" ng-model="vm.edit.maSP" required />
+              </div>
+              <div>
+                <label class="small muted">NGAYBATDAU *</label>
+                <input type="date" class="input" ng-model="vm.edit._start" required />
+              </div>
+              <div>
+                <label class="small muted">NGAYKETTHUC *</label>
+                <input type="date" class="input" ng-model="vm.edit._end" required />
+              </div>
+            </div>
+            <div class="row" style="gap:10px;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="btn secondary" ng-click="vm.closeEdit()">Hủy</button>
+              <button type="submit" class="btn">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

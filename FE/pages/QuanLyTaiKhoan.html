@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi" ng-app="dahApp">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý tài khoản - DAH</title>
+  <link rel="stylesheet" href="../style/QuanLyTaiKhoan.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+  <script src="../angular/angular.min.js"></script>
+  <script src="../script/login.js"></script>
+  <script src="../script/auth.js"></script>
+  <script defer src="../script/QuanLyTaiKhoan.js"></script>
+</head>
+<body ng-controller="TaiKhoanCtrl as vm">
+  <div class="warp">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">DAH</div>
+        <div><div>Quản lý bán lẻ và kho DAH</div></div>
+      </div>
+
+      <nav class="nav">
+        <div class="section-title">ADMIN</div>
+        <a href="QuanLyTaiKhoan.html" class="active">🛠️ Quản lý tài khoản</a>
+        <a href="QuanLyNhanVien.html">🧑‍💼 Quản lý nhân viên</a>
+        <a href="QuanLyKhuyenMai.html">🎁 Quản lý khuyến mãi</a>
+
+        <div class="section-title" style="margin-top:20px;font-weight:700;">Kế toán</div>
+        <a href="../pages/QuanLyCongNo.html">🧾 Quản lý công nợ</a>
+        <a href="../pages/BaoCaoThongKe.html">📊 Báo cáo thống kê</a>
+
+        <div class="section-title">THU NGÂN</div>
+        <a href="QuanLyBanHang.html">🧾 QUẢN LÝ BÁN HÀNG</a>
+        <a href="XuLyDoiTra.html">🔁 XỬ LÝ ĐỔI TRẢ</a>
+
+        <div class="section-title" style="margin-top:20px;font-weight:700;">Thủ kho</div>
+        <a href="QuanLyDanhMuc.html">📦 Quản lý Danh mục</a>
+        <a href="QuanLySanPham.html">📦 Quản lý Sản phẩm</a>
+        <a href="QuanLyNhapKho.html">📦 Quản lý Nhập kho</a>
+        <a href="QuanLyTonKho.html">📦 Quản lý Tồn kho</a>
+      </nav>
+
+      <div class="section-title">Tài khoản</div>
+      <div class="quick-stats">
+        <div class="row" style="justify-content:space-between">
+          <span>Người dùng:</span><strong>{{ vm.currentUser }}</strong>
+        </div>
+      </div>
+      <div class="small muted">© DAH</div>
+      <div class="logout">
+        <a href="index.html">Đăng xuất <i class="fa-solid fa-right-from-bracket"></i></a>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN ========== -->
+    <main class="main">
+      <div class="header">
+        <div>
+          <div class="breadcrumbs">ADMIN / Quản lý tài khoản</div>
+          <h1 class="h1">QUẢN LÝ TÀI KHOẢN</h1>
+        </div>
+        <div class="actions">
+          <div class="pill">Ngôn ngữ: VN</div>
+        </div>
+      </div>
+
+      <!-- DANH SÁCH -->
+      <section class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2 class="h2">Danh sách tài khoản</h2>
+          <div class="row" style="gap:10px;flex:1;justify-content:flex-end">
+            <input class="input" ng-model="vm.searchText" placeholder="Tìm theo MATAIKHOAN, USERNAME..." style="max-width:320px" />
+            <a class="btn" href ng-click="vm.openAdd()">+ Thêm tài khoản</a>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:10px">
+          <table>
+            <thead>
+              <tr>
+                <th>MATAIKHOAN</th>
+                <th>USERNAME</th>
+                <th>PASS</th>
+                <th>QUYỀN</th>
+                <th style="width:160px">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-if="!(vm.filtered && vm.filtered.length)">
+                <td colspan="5" style="text-align:center">Không có dữ liệu</td>
+              </tr>
+              <tr ng-repeat="x in (vm.filtered = (vm.list | filter:vm.searchFilter)) | limitTo: vm.perPage : (vm.page-1)*vm.perPage track by x.maTaiKhoan">
+                <td>{{ x.maTaiKhoan }}</td>
+                <td>{{ x.userName }}</td>
+                <td>••••••••</td>
+                <td>{{ vm.roleName(x.quyen) }}</td>
+                <td class="action-buttons">
+                  <button class="icon-btn edit" title="Sửa" ng-click="vm.openEdit(x)"><i class="fa-solid fa-pen-to-square"></i></button>
+                  <button class="icon-btn delete" title="Xóa" ng-click="vm.confirmDelete(x)"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Phân trang -->
+        <div id="pagination" style="margin-top:10px" ng-if="vm.filtered.length">
+          <button ng-disabled="vm.page===1" ng-click="vm.page=vm.page-1">«</button>
+          <button ng-repeat="p in vm.pages()" ng-class="{active: vm.page===p}" ng-click="vm.page=p">{{p}}</button>
+          <button ng-disabled="vm.page===vm.totalPages()" ng-click="vm.page=vm.page+1">»</button>
+        </div>
+      </section>
+
+      <!-- MODAL THÊM -->
+      <div id="addModal" class="modal" ng-show="vm.modalAdd">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Thêm tài khoản</h3>
+            <button class="close" ng-click="vm.closeAdd()">×</button>
+          </div>
+          <form ng-submit="vm.create()">
+            <div class="row form-grid">
+              <div>
+                <label class="small muted">MATAIKHOAN</label>
+                <input class="input" ng-model="vm.add.maTaiKhoan" placeholder="VD: TK003" />
+              </div>
+              <div>
+                <label class="small muted">USERNAME *</label>
+                <input class="input" ng-model="vm.add.userName" placeholder="VD: minh.ng" required />
+              </div>
+              <div>
+                <label class="small muted">PASS *</label>
+                <input class="input" ng-model="vm.add.pass" type="password" placeholder="Ít nhất 6 ký tự" required />
+              </div>
+              <div>
+                <label class="small muted">QUYỀN *</label>
+                <select class="input" ng-model="vm.add.quyen" required>
+                  <option value="4">Admin</option>
+                  <option value="3">Thủ kho</option>
+                  <option value="2">Thu ngân</option>
+                  <option value="1">Kế toán</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" style="gap:10px;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="btn secondary" ng-click="vm.closeAdd()">Hủy</button>
+              <button type="submit" class="btn">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL SỬA -->
+      <div id="editModal" class="modal" ng-show="vm.modalEdit">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Sửa tài khoản</h3>
+            <button class="close" ng-click="vm.closeEdit()">×</button>
+          </div>
+          <form ng-submit="vm.update()">
+            <div class="row form-grid">
+              <div>
+                <label class="small muted">MATAIKHOAN</label>
+                <input class="input" ng-model="vm.edit.maTaiKhoan" readonly />
+              </div>
+              <div>
+                <label class="small muted">USERNAME *</label>
+                <input class="input" ng-model="vm.edit.userName" required />
+              </div>
+              <div>
+                <label class="small muted">PASS (để trống nếu không đổi)</label>
+                <input class="input" ng-model="vm.edit.pass" type="password" />
+              </div>
+              <div>
+                <label class="small muted">QUYỀN *</label>
+                <select class="input" ng-model="vm.edit.quyen" required>
+                  <option value="4">Admin</option>
+                  <option value="3">Quản lý</option>
+                  <option value="2">Nhân viên</option>
+                  <option value="1">Kế toán</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" style="gap:10px;justify-content:flex-end;margin-top:12px">
+              <button type="button" class="btn secondary" ng-click="vm.closeEdit()">Hủy</button>
+              <button type="submit" class="btn">Lưu</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>
