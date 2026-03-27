@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Đăng ký - Điện Máy HL</title>
+  <link rel="shortcut icon" href="img/favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" crossorigin="anonymous">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/topnav.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+  <link rel="stylesheet" href="css/auth.css">
+
+  <script src="js/Jquery/Jquery.min.js"></script>
+  <script src="data/products.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/dungchung.js"></script>
+</head>
+
+<body>
+  <script>addTopNav();</script>
+  <section>
+    <script>addHeader();</script>
+
+    <div class="authWrap">
+      <div class="authCard">
+        <div class="authLeft">
+          <div class="authBrand">
+            <div class="authLogo">HL</div>
+            <div>
+              <div class="authTitle">Đăng ký</div>
+              <div class="authSub">Tạo tài khoản để mua hàng & theo dõi đơn.</div>
+            </div>
+          </div>
+          <div class="authHint">
+            <i class="fa fa-info-circle"></i>
+            Mật khẩu tối thiểu 6 ký tự (JS của bạn hiện chưa check, chỉ là gợi ý).
+          </div>
+        </div>
+
+        <div class="authRight">
+          <!-- QUAN TRỌNG: name đúng như JS signUp(form) -->
+          <form class="authForm" onsubmit="return signUp(this)">
+            <h2>Tạo tài khoản</h2>
+
+            <div class="authGrid2">
+              <div>
+                <label>Họ</label>
+                <div class="authInput">
+                  <i class="fa fa-id-card"></i>
+                  <input type="text" name="ho" placeholder="vd: Lê" required>
+                </div>
+              </div>
+              <div>
+                <label>Tên</label>
+                <div class="authInput">
+                  <i class="fa fa-id-card-o"></i>
+                  <input type="text" name="ten" placeholder="vd: Hoàng" required>
+                </div>
+              </div>
+            </div>
+
+            <label>Email</label>
+            <div class="authInput">
+              <i class="fa fa-envelope"></i>
+              <input type="email" name="email" placeholder="vd: example@gmail.com" required>
+            </div>
+
+            <label>Tên đăng nhập</label>
+            <div class="authInput">
+              <i class="fa fa-user"></i>
+              <input type="text" name="newUser" placeholder="vd: hoangle" required>
+            </div>
+
+            <label>Mật khẩu</label>
+            <div class="authInput">
+              <i class="fa fa-lock"></i>
+              <input type="password" name="newPass" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="authBtn authBtnPrimary">
+              <i class="fa fa-user-plus"></i> ĐĂNG KÝ
+            </button>
+
+            <div class="authSep"><span>đã có tài khoản?</span></div>
+
+            <a class="authBtn authBtnGhost" href="dangnhap.html">
+              <i class="fa fa-sign-in"></i> Đăng nhập
+            </a>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer"><script>addFooter();</script></div>
+  </section>
+</body>
+</html>

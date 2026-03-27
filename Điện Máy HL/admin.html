@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>Admin -Điện Máy HL</title>
+    <link rel="shortcut icon" href="img/favicon.ico" />
+
+    <!-- Load font awesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+        crossorigin="anonymous">
+
+    <!-- Chart JS -->
+
+   
+    <!-- Our files -->
+    <link rel="stylesheet" href="css/admin/style.css">
+    <link rel="stylesheet" href="css/admin/progress.css">
+
+    <script src="data/products.js"></script>
+    <script src="js/classes.js"></script>
+    <script src="js/dungchung.js"></script>
+    <script src="js/admin.js"></script>
+</head>
+
+<body>
+    <header>
+        <h2>Điện Máy HL - Admin</h2>
+    </header>
+
+    <!-- Menu -->
+    <aside class="sidebar">
+        <ul class="nav">
+            <li class="nav-title">MENU</li>
+            <li class="nav-item"><a class="nav-link active"><i class="fa fa-home"></i> Trang Chủ</a></li>
+            <li class="nav-item"><a class="nav-link"><i class="fa fa-th-large"></i> Sản Phẩm</a></li>
+            <li class="nav-item"><a class="nav-link"><i class="fa fa-file-text-o"></i> Đơn Hàng</a></li>
+            <li class="nav-item"><a class="nav-link"><i class="fa fa-address-book-o"></i> Khách Hàng</a></li>
+            <li class="nav-item"><a class="nav-link"><i class="fa fa-headphones"></i> Hỗ trợ</a></li>
+            <li class="nav-item"><a class="nav-link"><i class="fa fa-money"></i> Rút tiền</a></li>
+
+
+            <li class="nav-item">
+                <hr>
+            </li>
+            <li class="nav-item">
+                <a href="index.html" class="nav-link" onclick="logOutAdmin(); return true;">
+                    <i class="fa fa-arrow-left"></i>
+                    Đăng xuất (về Trang chủ)
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Khung hiển thị chính -->
+    <div class="main">
+        <div class="home">
+            <div>
+                <canvas id="myChart"></canvas>
+              </div>
+        </div>
+
+        <!-- Sản Phẩm -->
+        <div class="sanpham">
+            <table class="table-header">
+                <tr>
+                    <!-- Theo độ rộng của table content -->
+                    <th title="Sắp xếp" style="width: 5%" onclick="sortProductsTable('stt')">Stt <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 10%" onclick="sortProductsTable('masp')">Mã <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 40%" onclick="sortProductsTable('ten')">Tên <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 15%" onclick="sortProductsTable('gia')">Giá <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 15%" onclick="sortProductsTable('khuyenmai')">Khuyến mãi <i class="fa fa-sort"></i></th>
+                    <th style="width: 15%">Hành động</th>
+                </tr>
+            </table>
+
+            <div class="table-content">
+            </div>
+
+            <div class="table-footer">
+                <select name="kieuTimSanPham">
+                    <option value="ma">Tìm theo mã</option>
+                    <option value="ten">Tìm theo tên</option>
+                </select>
+                <input type="text" placeholder="Tìm kiếm..." onkeyup="timKiemSanPham(this)">
+                <button onclick="document.getElementById('khungThemSanPham').style.transform = 'scale(1)'; autoMaSanPham()">
+                    <i class="fa fa-plus-square"></i>
+                    Thêm sản phẩm
+                </button>
+            </div>
+
+            <div id="khungThemSanPham" class="overlay">
+                <span class="close" onclick="this.parentElement.style.transform = 'scale(0)';">&times;</span>
+                <table class="overlayTable table-outline table-content table-header">
+                    <tr>
+                        <th colspan="2">Thêm Sản Phẩm</th>
+                    </tr>
+                    <tr>
+                        <td>Mã sản phẩm:</td>
+                        <td><input type="text" id="maspThem"></td>
+                    </tr>
+                    <tr>
+                        <td>Tên sản phẩm:</td>
+                        <td><input type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Nhà Sản Xuất:</td>
+                        <td>
+                            <select name="chonCompany" onchange="autoMaSanPham(this.value)">
+                                <script>
+                                    var company = [""];
+                                    for(var c of company) {
+                                        document.writeln(`<option value="`+c+`">`+c+`</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Hình:</td>
+                        <td>
+                            <img class="hinhDaiDien" id="anhDaiDienSanPhamThem" src="">
+                            <input type="file" accept="image/*" onchange="capNhatAnhSanPham(this.files, 'anhDaiDienSanPhamThem')">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Giá tiền:</td>
+                        <td><input type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Số sao (số nguyên 0->5):</td>
+                        <td><input type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Đánh giá (số nguyên):</td>
+                        <td><input type="text"></td>
+                    </tr>
+                    <tr>
+                        <td>Khuyến mãi:</td>
+                        <td>
+                            <select>
+                                <option value="">Không</option>
+                                <option value="tragop">Trả góp</option>
+                                <option value="giamgia">Giảm giá</option>
+                                <option value="giareonline">Giá rẻ online</option>
+                                <option value="moiramat">Mới ra mắt</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Giá trị khuyến mãi:</td>
+                        <td><input type="text" placeholder=""></td>
+                    </tr>
+                    <tr>
+                        <th colspan="2">Thông số kĩ thuật</th>
+                    </tr>
+                    <tr>
+                        <td>Loại sản phẩm:</td>
+                        <td><input type="text" data-detail="loai" placeholder="TV / Tủ lạnh / Máy giặt / Điều hòa ..."></td>
+                    </tr>
+                    <tr>
+                        <td>Model:</td>
+                        <td><input type="text" data-detail="model" placeholder="VD: UA55AU8000 / RT35K..."></td>
+                    </tr>
+                    <tr>
+                        <td>Công suất / Dung tích:</td>
+                        <td><input type="text" data-detail="cong_suat" placeholder="VD: 1.5 HP / 345 lít / 10.5 kg ..."></td>
+                    </tr>
+                    <tr>
+                        <td>Công nghệ:</td>
+                        <td><input type="text" data-detail="cong_nghe" placeholder="Inverter / OLED / HEPA ..."></td>
+                    </tr>
+                    <tr>
+                        <td>Bảo hành:</td>
+                        <td><input type="text" data-detail="bao_hanh" value="24 tháng"></td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="2" class="table-footer"> <button onclick="themSanPham()">THÊM</button> </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="khungSuaSanPham" class="overlay"></div>
+        </div> <!-- // sanpham -->
+
+
+        <!-- Đơn Hàng -->
+        <div class="donhang">
+            <table class="table-header">
+                <tr>
+                    <!-- Theo độ rộng của table content -->
+                    <th title="Sắp xếp" style="width: 5%" onclick="sortDonHangTable('stt')">Stt <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 13%" onclick="sortDonHangTable('madon')">Mã đơn <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 7%" onclick="sortDonHangTable('khach')">Khách <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 20%" onclick="sortDonHangTable('sanpham')">Sản phẩm <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 15%" onclick="sortDonHangTable('tongtien')">Tổng tiền <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 10%" onclick="sortDonHangTable('ngaygio')">Ngày giờ <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 10%" onclick="sortDonHangTable('trangthai')">Trạng thái <i class="fa fa-sort"></i></th>
+                    <th style="width: 10%">Hành động</th>
+                </tr>
+            </table>
+
+            <div class="table-content">
+            </div>
+
+            <div class="table-footer">
+                <div class="timTheoNgay">
+                    Từ ngày: <input type="date" id="fromDate">
+                    Đến ngày: <input type="date" id="toDate">
+
+                    <button onclick="locDonHangTheoKhoangNgay()"><i class="fa fa-search"></i> Tìm</button>
+                </div>
+
+                <select name="kieuTimDonHang">
+                    <option value="ma">Tìm theo mã đơn</option>
+                    <option value="khachhang">Tìm theo tên khách hàng</option>
+                    <option value="trangThai">Tìm theo trạng thái</option>
+                </select>
+                <input type="text" placeholder="Tìm kiếm..." onkeyup="timKiemDonHang(this)">
+            </div>
+
+        </div> <!-- // don hang -->
+
+
+        <!-- Khách hàng -->
+        <div class="khachhang">
+            <table class="table-header">
+                <tr>
+                    <!-- Theo độ rộng của table content -->
+                    <th title="Sắp xếp" style="width: 5%" onclick="sortKhachHangTable('stt')">Stt <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 15%" onclick="sortKhachHangTable('hoten')">Họ tên <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 20%" onclick="sortKhachHangTable('email')">Email <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 20%" onclick="sortKhachHangTable('taikhoan')">Tài khoản <i class="fa fa-sort"></i></th>
+                    <th title="Sắp xếp" style="width: 10%" onclick="sortKhachHangTable('matkhau')">Mật khẩu <i class="fa fa-sort"></i></th>
+                    <th style="width: 10%">Hành động</th>
+                </tr>
+            </table>
+
+            <div class="table-content">
+            </div>
+
+            <div class="table-footer">
+                <select name="kieuTimKhachHang">
+                    <option value="ten">Tìm theo họ tên</option>
+                    <option value="email">Tìm theo email</option>
+                    <option value="taikhoan">Tìm theo tài khoản</option>
+                </select>
+                <input type="text" placeholder="Tìm kiếm..." onkeyup="timKiemNguoiDung(this)">
+                <button onclick="openThemNguoiDung()"><i class="fa fa-plus-square"></i> Thêm người dùng</button>
+            </div>
+        </div> <!-- // khach hang -->
+        <!-- HỖ TRỢ KHÁCH HÀNG -->
+<!-- Hỗ trợ khách hàng -->
+<div class="hotro">
+    <div class="support-admin">
+        <div class="support-list">
+            <h3>Yêu cầu hỗ trợ</h3>
+
+            <div class="ticket active">
+                <div class="name">Nguyễn Văn A</div>
+                <div class="subject">Không đăng nhập được</div>
+                <span class="status new">Chưa xử lý</span>
+            </div>
+
+            <div class="ticket">
+                <div class="name">Trần Thị B</div>
+                <div class="subject">Đơn hàng chưa giao</div>
+                <span class="status doing">Đang xử lý</span>
+            </div>
+
+            <div class="ticket">
+                <div class="name">Lê Văn C</div>
+                <div class="subject">Hoàn tiền</div>
+                <span class="status done">Đã xong</span>
+            </div>
+        </div>
+
+        <div class="support-chat">
+            <div class="chat-header">
+                <h3>Nguyễn Văn A</h3>
+                <span class="status new">Chưa xử lý</span>
+            </div>
+
+            <div class="chat-body">
+                <div class="msg user">Em không đăng nhập được</div>
+                <div class="msg admin">Bạn cho mình xin email đăng ký nhé</div>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" placeholder="Nhập phản hồi...">
+                <button><i class="fa fa-send"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Rút tiền -->
+<div class="ruttien">
+  <div class="withdraw-wrap">
+
+    <div class="withdraw-head">
+      <h2>Rút tiền</h2>
+      <div class="withdraw-actions">
+        <button class="btn ghost"><i class="fa fa-refresh"></i> Làm mới</button>
+        <button class="btn primary"><i class="fa fa-plus"></i> Tạo yêu cầu</button>
+      </div>
+    </div>
+
+    <!-- Thống kê -->
+    <div class="withdraw-stats">
+      <div class="w-card">
+        <div class="w-label">Số dư ví</div>
+        <div class="w-value">12.380.000₫</div>
+        <div class="w-sub">Cập nhật: hôm nay</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">Chờ duyệt</div>
+        <div class="w-value">3.200.000₫</div>
+        <div class="w-sub">2 yêu cầu</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">Đã rút tháng này</div>
+        <div class="w-value">8.500.000₫</div>
+        <div class="w-sub">Tháng 12/2025</div>
+      </div>
+      <div class="w-card">
+        <div class="w-label">Phí dự kiến</div>
+        <div class="w-value">15.000₫</div>
+        <div class="w-sub">Tuỳ ngân hàng</div>
+      </div>
+    </div>
+
+    <div class="withdraw-grid">
+      <!-- Form tạo yêu cầu -->
+      <div class="withdraw-form">
+        <h3>Tạo yêu cầu rút tiền</h3>
+
+        <div class="form-row">
+          <label>Số tiền rút</label>
+          <div class="money">
+            <input type="text" placeholder="VD: 1.000.000" />
+            <span>₫</span>
+          </div>
+          <small>Hạn mức tối thiểu 100.000₫</small>
+        </div>
+
+        <div class="form-row two">
+          <div>
+            <label>Ngân hàng</label>
+            <select>
+              <option>Vietcombank</option>
+              <option>VietinBank</option>
+              <option>BIDV</option>
+              <option>MB Bank</option>
+              <option>ACB</option>
+            </select>
+          </div>
+          <div>
+            <label>Chi nhánh</label>
+            <input type="text" placeholder="VD: TP.HCM" />
+          </div>
+        </div>
+
+        <div class="form-row two">
+          <div>
+            <label>Số tài khoản</label>
+            <input type="text" placeholder="VD: 0123456789" />
+          </div>
+          <div>
+            <label>Chủ tài khoản</label>
+            <input type="text" placeholder="VD: NGUYEN VAN A" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Ghi chú</label>
+          <textarea rows="3" placeholder="VD: Rút tiền doanh thu tuần này..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn ghost">Lưu nháp</button>
+          <button class="btn primary">Gửi duyệt</button>
+        </div>
+
+        <div class="hint">
+          <i class="fa fa-info-circle"></i>
+          Yêu cầu sẽ được xử lý trong 1–2 ngày làm việc.
+        </div>
+      </div>
+
+      <!-- Danh sách yêu cầu -->
+      <div class="withdraw-table">
+        <div class="table-head">
+          <h3>Lịch sử yêu cầu</h3>
+          <div class="filters">
+            <select>
+              <option>Tất cả trạng thái</option>
+              <option>Chờ duyệt</option>
+              <option>Đã duyệt</option>
+              <option>Từ chối</option>
+            </select>
+            <input type="text" placeholder="Tìm theo mã / ngân hàng..." />
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã</th>
+                <th>Số tiền</th>
+                <th>Ngân hàng</th>
+                <th>Thời gian</th>
+                <th>Trạng thái</th>
+                <th class="right">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>#WD2312</td>
+                <td class="moneyCol">1.200.000₫</td>
+                <td>Vietcombank</td>
+                <td>30/12/2025 21:10</td>
+                <td><span class="badge wait">Chờ duyệt</span></td>
+                <td class="right">
+                  <button class="mini">Chi tiết</button>
+                  <button class="mini danger">Huỷ</button>
+                </td>
+              </tr>
+              <tr>
+                <td>#WD2311</td>
+                <td class="moneyCol">2.000.000₫</td>
+                <td>MB Bank</td>
+                <td>28/12/2025 14:02</td>
+                <td><span class="badge ok">Đã duyệt</span></td>
+                <td class="right">
+                  <button class="mini">Biên nhận</button>
+                </td>
+              </tr>
+              <tr>
+                <td>#WD2310</td>
+                <td class="moneyCol">500.000₫</td>
+                <td>ACB</td>
+                <td>20/12/2025 09:15</td>
+                <td><span class="badge no">Từ chối</span></td>
+                <td class="right">
+                  <button class="mini">Lý do</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+    </div> <!-- // main -->
+ 
+
+    <footer>
+
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+            const ctx = document.getElementById('myChart');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+      datasets: [{
+        label: '# of Votes',
+        data: [12, 19, 3, 5, 2, 3],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+      
+    </script>
+</body>
+
+</html>

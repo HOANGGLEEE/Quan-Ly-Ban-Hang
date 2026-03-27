@@ -1,0 +1,25 @@
+.pay-wrap{max-width:1100px;margin:30px auto;padding:0 16px}
+.pay-card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:22px}
+.pay-head h1{margin:0 0 6px}
+.muted{color:#6b7280}
+
+.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+.pay-box{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:14px;display:grid;gap:8px}
+.pay-total{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding:12px 14px;border:1px dashed #d1d5db;border-radius:12px}
+.pay-total b{font-size:18px;color:#ef4444}
+
+.pay-note{margin-top:10px;background:#fff7ed;border:1px solid #fed7aa;border-left:6px solid #fb923c;border-radius:12px;padding:12px 14px}
+
+.qr{display:flex;justify-content:center;align-items:center;background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+.qr img{max-width:280px;width:100%;height:auto;border-radius:10px;background:#fff}
+
+.pay-actions{display:flex;justify-content:center;gap:14px;margin-top:18px;flex-wrap:wrap}
+.btn-back,.btn-confirm{border:none;border-radius:10px;padding:12px 18px;font-size:16px;cursor:pointer}
+.btn-back{background:#6b7280;color:#fff}
+.btn-back:hover{background:#4b5563}
+.btn-confirm{background:#16a34a;color:#fff;font-weight:700}
+.btn-confirm:hover{background:#15803d}
+
+@media (max-width: 860px){
+  .pay-grid{grid-template-columns:1fr}
+}

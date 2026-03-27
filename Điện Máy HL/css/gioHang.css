@@ -1,0 +1,229 @@
+/* =========================
+   GIỎ HÀNG - UI MODERN + RESPONSIVE
+   (Không cần sửa HTML/JS)
+   ========================= */
+
+:root{
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --shadow: 0 10px 28px rgba(0,0,0,.08);
+  --radius: 16px;
+
+  --primary: #ef4444;   /* đỏ hiện đại */
+  --primary2:#f97316;   /* cam */
+  --green: #16a34a;
+  --green2:#22c55e;
+  --danger:#dc2626;
+  --danger2:#f87171;
+}
+
+/* nền trang giỏ hàng (table nằm trong section) */
+section{
+  background: transparent;
+}
+
+/* TABLE WRAP */
+.listSanPham{
+  width: min(1200px, calc(100% - 32px));
+  margin: 28px auto 90px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0,0,0,.05);
+}
+
+/* HEADER */
+.listSanPham th{
+  background: #0f172a;           /* xanh đen */
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: .2px;
+  padding: 14px 12px;
+  border: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* CELL */
+.listSanPham td{
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  padding: 14px 12px;
+  vertical-align: middle;
+  color: var(--text);
+  background: #fff;
+}
+.listSanPham td:last-child{ border-right: none; }
+
+/* zebra nhẹ */
+.listSanPham tr:nth-of-type(even) td{
+  background: #fafafa;
+}
+
+/* hover */
+.listSanPham tr:not(:first-child):not(:last-child):hover td{
+  background: #f3f4f6;
+}
+
+/* canh cột */
+.listSanPham tr td:first-child,
+.listSanPham tr th:first-child{
+  width: 60px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.listSanPham .alignRight{
+  text-align: right;
+  padding-right: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cột sản phẩm */
+.noPadding{
+  padding: 12px 12px 12px 16px;
+  line-height: 1.35;
+}
+.listSanPham td a{
+  display: inline-block;
+  position: relative;
+  padding: 2px 0;
+  color: var(--text);
+  font-weight: 700;
+}
+.listSanPham td a:hover{
+  text-decoration: underline;
+}
+
+/* Ảnh hover (giữ feature cũ, nhưng làm mượt hơn) */
+.imgHide img{
+  position: absolute;
+  right: -170px;
+  top: -10px;
+  width: 170px;
+  height: 0;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  transition: .15s ease;
+  object-fit: cover;
+  background: #fff;
+}
+.imgHide a:hover img{
+  height: 170px;
+}
+
+/* SỐ LƯỢNG: nút +/- hiện đại */
+.listSanPham .soluong{
+  text-align: center;
+  white-space: nowrap;
+}
+.listSanPham .soluong button{
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  background: #fff;
+  font-weight: 900;
+  transition: .15s ease;
+}
+.listSanPham .soluong button:hover{
+  border-color: rgba(239,68,68,.35);
+  box-shadow: 0 8px 18px rgba(239,68,68,.12);
+  transform: translateY(-1px);
+}
+.listSanPham .soluong input{
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 1em;
+  font-weight: 800;
+  text-align: center;
+  width: 72px;
+  height: 34px;
+  margin: 0 8px;
+  outline: none;
+}
+
+/* Nút xóa icon */
+.fa-trash{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  color: #9ca3af;
+  cursor: pointer;
+  transition: .15s ease;
+}
+.fa-trash:hover{
+  color: #fff;
+  background: var(--danger);
+  border-color: var(--danger);
+  transform: translateY(-1px);
+}
+
+/* ======= DÒNG TỔNG TIỀN / THANH TOÁN (last row) ======= */
+.listSanPham tr:last-child td{
+  background: #0b1220; /* nền tối sang */
+  color: #fff;
+  border-top: 1px solid rgba(255,255,255,.12);
+  font-weight: 900;
+}
+
+/* tổng tiền */
+.listSanPham tr:last-child td:nth-child(5),
+.listSanPham tr:last-child td:nth-child(4){
+  font-variant-numeric: tabular-nums;
+}
+
+/* nút thanh toán */
+.thanhtoan,
+.thanhtoanck{
+  border: none;
+  border-radius: 14px;
+  font-size: 1.1em;
+  padding: 14px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .15s ease;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.thanhtoan{
+  background: linear-gradient(90deg, var(--green), var(--green2));
+  color: #fff;
+}
+.thanhtoan:hover{
+  filter: brightness(.97);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(34,197,94,.18);
+}
+
+.thanhtoanck{
+  background: linear-gradient(90deg, var(--primary), var(--primary2));
+  color: #fff;
+}
+.thanhtoanck:hover{
+  filter: brightness(.97);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(239,68,68,.18);
+}
+
+/* xóa hết */
+.xoaHet:hover{
+  background: rgba(220,38,38,.95);
+  border-color: rgba(220,38,38,.95);
+  transform: translateY(-1px);
+}
+

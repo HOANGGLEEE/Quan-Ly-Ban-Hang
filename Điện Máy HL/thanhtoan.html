@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thanh toán chuyển khoản | Điện Máy HL</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/topnav.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/footer.css">
+
+  <link rel="stylesheet" href="css/thanhtoan.css">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="js/Jquery/Jquery.min.js"></script>
+
+  <!-- JS lõi của bạn (để dùng khoiTao(), getCurrentUser(), setCurrentUser(), updateListUser(), addAlertBox(), ...) -->
+  <script src="data/products.js"></script>
+  <script src="js/classes.js"></script>
+  <script src="js/dungchung.js"></script>
+
+  <!-- JS trang thanh toán -->
+  <script src="js/thanhtoan.js"></script>
+</head>
+
+<body>
+  <script>addTopNav();</script>
+
+  <section>
+    <script>addHeader();</script>
+
+    <div class="pay-wrap">
+      <div class="pay-card">
+        <div class="pay-head">
+          <h1>Thanh toán chuyển khoản</h1>
+          <p class="muted">Quét QR để thanh toán. Sau khi chuyển khoản xong, bấm “Xác nhận thanh toán”.</p>
+        </div>
+
+        <div class="pay-grid">
+          <div class="pay-left">
+            <h3>Thông tin chuyển khoản</h3>
+            <div class="pay-box">
+              <div><b>Chủ TK:</b> <span id="payOwner">NGUYEN VAN A</span></div>
+              <div><b>Ngân hàng:</b> <span id="payBank">Techcombanh</span></div>
+              <div><b>Số TK:</b> <span id="payAcc">4444448888</span></div>
+              <div><b>Nội dung:</b> <span id="payContent">THANH TOAN DIEN MAY HL</span></div>
+            </div>
+
+            <div class="pay-total">
+              <span>Tổng tiền:</span>
+              <b id="payTotal">—</b>
+            </div>
+
+            <div class="pay-note">
+              ⚠️ Vui lòng nhập đúng <b>nội dung chuyển khoản</b> để được xác nhận nhanh.
+            </div>
+          </div>
+
+          <div class="pay-right">
+            <h3>Mã QR</h3>
+            <div class="qr">
+              <!-- Đổi đúng file QR của bạn -->
+              <img src="img/qr-thanhtoan.png" alt="QR thanh toán">
+            </div>
+            <div class="muted" style="text-align:center;margin-top:10px">
+              Hỗ trợ VietQR / MoMo / Banking App
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 nút cạnh nhau -->
+        <div class="pay-actions">
+          <button class="btn-back" onclick="veTrangChu()">⬅ Quay về trang chủ</button>
+          <button class="btn-confirm" onclick="xacNhanThanhToan()">✔ Xác nhận thanh toán</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer"><script>addFooter();</script></div>
+  </section>
+
+  <i class="fa fa-arrow-up" id="goto-top-page" onclick="gotoTop()"></i>
+</body>
+</html>
