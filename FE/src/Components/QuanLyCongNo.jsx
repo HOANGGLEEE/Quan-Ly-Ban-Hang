@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { formatCurrency } from '../data/mockData';
+import { api } from '../services/api';
 
 const seedDebts = [
   { id: 'CN001', customer: 'Công ty An Phát', phone: '0283999888', invoices: 1, total: 41970000, paid: 20000000 },
@@ -9,6 +10,28 @@ const seedDebts = [
 const QuanLyCongNo = () => {
   const [debts, setDebts] = useState(seedDebts);
   const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    Promise.all([api.sales.invoices(), api.sales.customers()])
+      .then(([invoiceData, customerData]) => {
+        if (!Array.isArray(invoiceData) || !Array.isArray(customerData)) return;
+        const customersById = Object.fromEntries(customerData.map((item) => [item.id, item]));
+        const grouped = invoiceData.map((invoice) => {
+          const customer = customersById[invoice.customerId] || {};
+          const total = Number(invoice.subtotal || invoice.TONGTIENHANG || 0);
+          return {
+            id: invoice.id,
+            customer: customer.name || invoice.customerId || 'Khách hàng',
+            phone: customer.phone || '',
+            invoices: 1,
+            total,
+            paid: invoice.status === 'Đã thanh toán' ? total : 0,
+          };
+        });
+        if (grouped.length) setDebts(grouped);
+      })
+      .catch(() => {});
+  }, []);
   const filteredDebts = debts.filter((item) => item.customer.toLowerCase().includes(search.toLowerCase()) || item.phone.includes(search));
 
   const markPaid = (id) => {

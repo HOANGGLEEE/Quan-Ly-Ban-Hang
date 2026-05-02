@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { employees as seedEmployees } from '../data/mockData';
+import { api } from '../services/api';
 
 const QuanLyNhanVien = () => {
   const [employees, setEmployees] = useState(seedEmployees);
   const [form, setForm] = useState(null);
 
-  const saveEmployee = (event) => {
+  useEffect(() => {
+    api.employees.list().then((data) => Array.isArray(data) && setEmployees(data)).catch(() => {});
+  }, []);
+
+  const saveEmployee = async (event) => {
     event.preventDefault();
+    const payload = { MANV: form.id, TENNV: form.name, SDT: form.phone, DIACHI: form.address || form.role || '' };
+    if (employees.some((item) => item.id === form.id)) await api.employees.update(payload);
+    else await api.employees.create(payload);
     setEmployees((current) =>
       current.some((item) => item.id === form.id)
         ? current.map((item) => (item.id === form.id ? form : item))
@@ -40,7 +48,7 @@ const QuanLyNhanVien = () => {
                   <td><span className="badge success">{item.status}</span></td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm(item)}>Sửa</button>
-                    <button className="btn danger" onClick={() => setEmployees(employees.filter((x) => x.id !== item.id))}>Xóa</button>
+                    <button className="btn danger" onClick={async () => { await api.employees.remove(item.id); setEmployees(employees.filter((x) => x.id !== item.id)); }}>Xóa</button>
                   </td>
                 </tr>
               ))}

@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { categories as seedCategories } from '../data/mockData';
+import { api } from '../services/api';
 
 const QuanLyDanhMuc = () => {
   const [items, setItems] = useState(seedCategories);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);
 
+  useEffect(() => {
+    api.categories.list().then((data) => Array.isArray(data) && setItems(data)).catch(() => {});
+  }, []);
+
   const filteredItems = items.filter((item) =>
     [item.id, item.name, item.description].some((value) => value.toLowerCase().includes(search.toLowerCase())),
   );
 
-  const saveCategory = (event) => {
+  const saveCategory = async (event) => {
     event.preventDefault();
+    const payload = { MADANHMUC: form.id, TENDANHMUC: form.name, MOTA: form.description };
+    if (items.some((item) => item.id === form.id)) await api.categories.update(payload);
+    else await api.categories.create(payload);
     setItems((current) =>
       current.some((item) => item.id === form.id)
         ? current.map((item) => (item.id === form.id ? form : item))
@@ -46,7 +54,7 @@ const QuanLyDanhMuc = () => {
                   <td>{item.description}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm(item)}>Sửa</button>
-                    <button className="btn danger" onClick={() => setItems(items.filter((x) => x.id !== item.id))}>Xóa</button>
+                    <button className="btn danger" onClick={async () => { await api.categories.remove(item.id); setItems(items.filter((x) => x.id !== item.id)); }}>Xóa</button>
                   </td>
                 </tr>
               ))}

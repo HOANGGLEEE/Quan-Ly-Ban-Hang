@@ -1,16 +1,16 @@
-const config = require("./config");
+require("dotenv").config();
+
 const app = require("./app");
 const { connectDB } = require("./config/db");
 
-(async () => {
-  try {
-    await connectDB();
-    console.log("Connected to SQL Server");
-  } catch (err) {
-    console.error("DB connection error:", err.message);
-  }
+const PORT = process.env.PORT || 3000;
 
-  app.listen(config.port, () => {
-    console.log(`Node API dang chay tai http://localhost:${config.port}`);
+(async () => {
+  console.log("Starting Project_QuanLyBanLe_Node...");
+
+  await connectDB();
+
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
 })();

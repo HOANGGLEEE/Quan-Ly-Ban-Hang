@@ -1,14 +1,26 @@
-import React, { useMemo, useState } from 'react';
-import { formatCurrency, invoices, products } from '../data/mockData';
+import React, { useEffect, useMemo, useState } from 'react';
+import { formatCurrency, invoices as seedInvoices, products as seedProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 const BaoCaoThongKe = () => {
+  const [products, setProducts] = useState(seedProducts);
+  const [invoices, setInvoices] = useState(seedInvoices);
   const [fromDate, setFromDate] = useState('2026-04-01');
   const [toDate, setToDate] = useState('2026-04-30');
   const [reportType, setReportType] = useState('Doanh thu');
 
+  useEffect(() => {
+    Promise.all([api.products.list(), api.sales.invoices()])
+      .then(([productData, invoiceData]) => {
+        if (Array.isArray(productData)) setProducts(productData);
+        if (Array.isArray(invoiceData)) setInvoices(invoiceData.map((item) => ({ ...item, date: item.date?.slice?.(0, 10) || item.date, items: item.items || [] })));
+      })
+      .catch(() => {});
+  }, []);
+
   const revenue = useMemo(
     () => invoices.reduce((sum, invoice) => sum + invoice.items.reduce((itemSum, item) => itemSum + item.price * item.quantity, 0), 0),
-    [],
+    [invoices],
   );
 
   const rows = useMemo(() => {
@@ -31,7 +43,7 @@ const BaoCaoThongKe = () => {
       note: item.id,
       value: item.stock,
     }));
-  }, [reportType]);
+  }, [invoices, products, reportType]);
 
   return (
     <div className="page">

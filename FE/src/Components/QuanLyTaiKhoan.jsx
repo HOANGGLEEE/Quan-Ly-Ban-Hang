@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { api } from '../services/api';
 
 const roles = {
   admin: 'Quản trị',
@@ -16,6 +17,10 @@ const QuanLyTaiKhoan = () => {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);
 
+  useEffect(() => {
+    api.accounts.list().then((data) => Array.isArray(data) && setAccounts(data)).catch(() => {});
+  }, []);
+
   const filteredAccounts = useMemo(() => {
     const keyword = search.toLowerCase();
     return accounts.filter((item) =>
@@ -23,8 +28,12 @@ const QuanLyTaiKhoan = () => {
     );
   }, [accounts, search]);
 
-  const saveAccount = (event) => {
+  const saveAccount = async (event) => {
     event.preventDefault();
+    const roleValue = { admin: 1, cashier: 2, warehouse: 3, accountant: 4 }[form.role] || Number(form.role) || 2;
+    const payload = { MATAIKHOAN: form.id, USERNAME: form.username, PASS: form.password || form.PASS || '', QUYEN: roleValue };
+    if (accounts.some((item) => item.id === form.id)) await api.accounts.update(payload);
+    else await api.accounts.create(payload);
     setAccounts((current) =>
       current.some((item) => item.id === form.id)
         ? current.map((item) => (item.id === form.id ? form : item))
@@ -61,7 +70,7 @@ const QuanLyTaiKhoan = () => {
                   <td><span className="badge success">{item.status}</span></td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm({ ...item, password: '' })}>Sửa</button>
-                    <button className="btn danger" onClick={() => setAccounts(accounts.filter((x) => x.id !== item.id))}>Xóa</button>
+                    <button className="btn danger" onClick={async () => { await api.accounts.remove(item.id); setAccounts(accounts.filter((x) => x.id !== item.id)); }}>Xóa</button>
                   </td>
                 </tr>
               ))}

@@ -1,13 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import hook chuyển trang
 import '../style/index.css';
+import { api } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate(); // Khởi tạo hàm điều hướng
+  const [error, setError] = useState('');
 
-  const handleFakeLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault(); // Ngăn form reload lại trang web
-    navigate('/ban-hang'); 
+    setError('');
+    const formData = new FormData(e.currentTarget);
+    try {
+      const user = await api.login({
+        username: formData.get('username'),
+        password: formData.get('password'),
+      });
+      if (!user) {
+        setError('Sai tài khoản hoặc mật khẩu.');
+        return;
+      }
+      localStorage.setItem('user', JSON.stringify(user));
+      navigate('/ban-hang');
+    } catch (err) {
+      setError(err.message || 'Không thể đăng nhập.');
+    }
   };
 
   return (
@@ -15,8 +32,7 @@ const Login = () => {
       <section className="login-card" role="region" aria-label="Form đăng nhập">
         <h1 id="loginTitle" className="title">Đăng nhập</h1>
         
-        {/* Gọi hàm handleFakeLogin khi bấm submit */}
-        <form onSubmit={handleFakeLogin} className="form">
+        <form onSubmit={handleLogin} className="form">
           <label htmlFor="username" className="label">Tài khoản</label>
           <input
             id="username"
@@ -39,6 +55,7 @@ const Login = () => {
               required
             />
           </div>
+          {error && <p className="muted">{error}</p>}
           
           <button type="submit" className="btn-submit">Đăng nhập</button>
         </form>

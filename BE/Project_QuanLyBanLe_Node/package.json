@@ -1,21 +1,21 @@
 {
   "name": "project-quanlybanle-node",
   "version": "1.0.0",
-  "description": "Node.js API port of Project_QuanLyBanLe .NET services.",
+  "description": "Node API for Project_QuanLyBanLe",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "test": "node --check src/server.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "jsonwebtoken": "^9.0.2",
-    "mssql": "^11.0.1",
-    "msnodesqlv8": "^4.4.0"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.9"
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "mssql": "^12.2.1"
   }
 }

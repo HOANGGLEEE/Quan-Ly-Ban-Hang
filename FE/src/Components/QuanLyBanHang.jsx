@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
-import { formatCurrency, products } from '../data/mockData';
+import React, { useEffect, useMemo, useState } from 'react';
+import { formatCurrency, products as seedProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 const customers = {
   KH001: { id: 'KH001', name: 'Nguyễn Văn A', phone: '0909009001', address: 'Quận 1, TP. Hồ Chí Minh' },
@@ -7,6 +8,8 @@ const customers = {
 };
 
 const QuanLyBanHang = () => {
+  const [products, setProducts] = useState(seedProducts);
+  const [customerList, setCustomerList] = useState(Object.values(customers));
   const [customerCode, setCustomerCode] = useState('KH001');
   const [customer, setCustomer] = useState(customers.KH001);
   const [productId, setProductId] = useState(products[0].id);
@@ -14,6 +17,18 @@ const QuanLyBanHang = () => {
   const [cart, setCart] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('Tiền mặt');
   const [paidInvoice, setPaidInvoice] = useState(null);
+
+  useEffect(() => {
+    Promise.all([api.products.list(), api.sales.customers()])
+      .then(([productData, customerData]) => {
+        if (Array.isArray(productData) && productData.length) {
+          setProducts(productData);
+          setProductId(productData[0].id);
+        }
+        if (Array.isArray(customerData)) setCustomerList(customerData);
+      })
+      .catch(() => {});
+  }, []);
 
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
@@ -23,7 +38,8 @@ const QuanLyBanHang = () => {
   const total = subtotal + vat;
 
   const handleFindCustomer = () => {
-    const found = customers[customerCode.trim().toUpperCase()];
+    const code = customerCode.trim().toUpperCase();
+    const found = customerList.find((item) => item.id === code) || customers[code];
     setCustomer(found || { id: customerCode.toUpperCase(), name: 'Khách lẻ', phone: '', address: '' });
   };
 
@@ -44,10 +60,26 @@ const QuanLyBanHang = () => {
     setQuantity(1);
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (cart.length === 0) return;
+    const invoiceId = `HD${Date.now().toString().slice(-5)}`;
+    await api.sales.createInvoice({
+      MAHDBAN: invoiceId,
+      MAKH: customer.id,
+      NGAYLAP: new Date().toISOString(),
+      THUEVAT: vat,
+      GIAMGIA: 0,
+      items: cart.map((item) => ({ productId: item.id, quantity: item.quantity, price: item.price })),
+    });
+    await api.sales.createPayment({
+      id: `TT${Date.now().toString().slice(-5)}`,
+      invoiceId,
+      method: paymentMethod,
+      amount: total,
+      status: 'Đã thanh toán',
+    });
     setPaidInvoice({
-      id: `HD${Date.now().toString().slice(-5)}`,
+      id: invoiceId,
       customer,
       paymentMethod,
       subtotal,

@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
-import { formatCurrency, invoices } from '../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { formatCurrency, invoices as seedInvoices } from '../data/mockData';
+import { api } from '../services/api';
 
 const XuLyDoiTra = () => {
+  const [invoices, setInvoices] = useState(seedInvoices);
   const [invoiceCode, setInvoiceCode] = useState('HD001');
   const [invoice, setInvoice] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [reason, setReason] = useState('Lỗi kỹ thuật');
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    api.sales.invoices()
+      .then((data) => Array.isArray(data) && data.length && setInvoices(data.map((item) => ({ ...item, customer: item.customerId || item.customer || '', phone: item.phone || '', items: item.items || [] }))))
+      .catch(() => {});
+  }, []);
 
   const findInvoice = (event) => {
     event.preventDefault();

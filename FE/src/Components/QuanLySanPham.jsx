@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { categories, formatCurrency, products as seedProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 const blankProduct = {
   id: '',
@@ -14,9 +15,19 @@ const blankProduct = {
 
 const QuanLySanPham = () => {
   const [items, setItems] = useState(seedProducts);
+  const [categoryItems, setCategoryItems] = useState(categories);
   const [search, setSearch] = useState('');
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(blankProduct);
+
+  useEffect(() => {
+    Promise.all([api.products.list(), api.categories.list()])
+      .then(([productData, categoryData]) => {
+        if (Array.isArray(productData)) setItems(productData);
+        if (Array.isArray(categoryData)) setCategoryItems(categoryData);
+      })
+      .catch(() => {});
+  }, []);
 
   const filteredItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -35,9 +46,22 @@ const QuanLySanPham = () => {
     setModal('edit');
   };
 
-  const saveProduct = (event) => {
+  const saveProduct = async (event) => {
     event.preventDefault();
     const payload = { ...form, price: Number(form.price), stock: Number(form.stock), vat: Number(form.vat) };
+    const dbPayload = {
+      MASP: payload.id,
+      TENSP: payload.name,
+      MADANHMUC: payload.categoryId || categoryItems.find((item) => item.name === payload.category)?.id || payload.category,
+      MAVACH: payload.barcode,
+      DONGIA: payload.price,
+      THUEVAT: payload.vat,
+      SOLUONGTON: payload.stock,
+      THUOCTINH: payload.attributes,
+      MOTA: payload.description || '',
+    };
+    if (modal === 'edit') await api.products.update(dbPayload);
+    else await api.products.create(dbPayload);
     setItems((current) =>
       modal === 'edit'
         ? current.map((item) => (item.id === payload.id ? payload : item))
@@ -93,7 +117,7 @@ const QuanLySanPham = () => {
                   <td>{item.attributes}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => openEdit(item)}>Sửa</button>
-                    <button className="btn danger" onClick={() => setItems(items.filter((x) => x.id !== item.id))}>Xóa</button>
+                    <button className="btn danger" onClick={async () => { await api.products.remove(item.id); setItems(items.filter((x) => x.id !== item.id)); }}>Xóa</button>
                   </td>
                 </tr>
               ))}
@@ -113,7 +137,7 @@ const QuanLySanPham = () => {
               <div className="form-grid">
                 <div><label>Mã sản phẩm</label><input className="input" value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} required readOnly={modal === 'edit'} /></div>
                 <div><label>Tên sản phẩm</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-                <div><label>Danh mục</label><select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>{categories.map((item) => <option key={item.id}>{item.name}</option>)}</select></div>
+                <div><label>Danh mục</label><select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, categoryId: categoryItems.find((item) => item.name === e.target.value)?.id })}>{categoryItems.map((item) => <option key={item.id}>{item.name}</option>)}</select></div>
                 <div><label>Mã vạch</label><input className="input" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /></div>
                 <div><label>Giá bán</label><input className="input" type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required /></div>
                 <div><label>Tồn kho</label><input className="input" type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} required /></div>

@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
-import { products } from '../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { products as seedProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 const QuanLyKhuyenMai = () => {
+  const [products, setProducts] = useState(seedProducts);
   const [promotions, setPromotions] = useState([
     { id: 'KM001', name: 'Giảm 10% TV 4K', productId: 'SP001', discount: 10, start: '2026-04-20', end: '2026-05-15', status: 'Đang chạy' },
     { id: 'KM002', name: 'Ưu đãi laptop mùa tựu trường', productId: 'SP005', discount: 7, start: '2026-04-25', end: '2026-05-31', status: 'Đang chạy' },
   ]);
   const [form, setForm] = useState(null);
 
-  const savePromotion = (event) => {
+  useEffect(() => {
+    Promise.all([api.promotions.list(), api.products.list()])
+      .then(([promotionData, productData]) => {
+        if (Array.isArray(promotionData)) setPromotions(promotionData.map((item) => ({ ...item, start: item.startDate?.slice?.(0, 10) || item.start, end: item.endDate?.slice?.(0, 10) || item.end, discount: item.discount || 0, status: item.status || 'Đang chạy' })));
+        if (Array.isArray(productData) && productData.length) setProducts(productData);
+      })
+      .catch(() => {});
+  }, []);
+
+  const savePromotion = async (event) => {
     event.preventDefault();
     const payload = { ...form, discount: Number(form.discount) };
+    const dbPayload = { MaKM: payload.id, TenKM: payload.name, MaSP: payload.productId, NgayBD: payload.start, NgayKT: payload.end };
+    if (promotions.some((item) => item.id === payload.id)) await api.promotions.update(dbPayload);
+    else await api.promotions.create(dbPayload);
     setPromotions((current) =>
       current.some((item) => item.id === payload.id)
         ? current.map((item) => (item.id === payload.id ? payload : item))
@@ -44,7 +58,7 @@ const QuanLyKhuyenMai = () => {
                   <td>{item.start}</td>
                   <td>{item.end}</td>
                   <td><span className="badge success">{item.status}</span></td>
-                  <td className="table-actions"><button className="btn secondary" onClick={() => setForm(item)}>Sửa</button><button className="btn danger" onClick={() => setPromotions(promotions.filter((x) => x.id !== item.id))}>Xóa</button></td>
+                  <td className="table-actions"><button className="btn secondary" onClick={() => setForm(item)}>Sửa</button><button className="btn danger" onClick={async () => { await api.promotions.remove(item.id); setPromotions(promotions.filter((x) => x.id !== item.id)); }}>Xóa</button></td>
                 </tr>
               ))}
             </tbody>

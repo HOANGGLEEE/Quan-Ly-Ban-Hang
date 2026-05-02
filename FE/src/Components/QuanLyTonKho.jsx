@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { formatCurrency, products as seedProducts } from '../data/mockData';
+import { api } from '../services/api';
 
 const QuanLyTonKho = () => {
   const [items, setItems] = useState(seedProducts);
@@ -7,16 +8,21 @@ const QuanLyTonKho = () => {
   const [adjustType, setAdjustType] = useState('increase');
   const [quantity, setQuantity] = useState(1);
 
+  useEffect(() => {
+    api.products.list().then((data) => Array.isArray(data) && setItems(data)).catch(() => {});
+  }, []);
+
   const lowStock = useMemo(() => items.filter((item) => item.stock <= 7).length, [items]);
   const inventoryValue = useMemo(() => items.reduce((sum, item) => sum + item.stock * item.price, 0), [items]);
 
-  const applyAdjustment = (event) => {
+  const applyAdjustment = async (event) => {
     event.preventDefault();
     const amount = Math.max(Number(quantity) || 1, 1);
+    const nextStock = adjustType === 'increase' ? adjusting.stock + amount : Math.max(adjusting.stock - amount, 0);
+    await api.products.updateStock(adjusting.id, nextStock);
     setItems((current) =>
       current.map((item) => {
         if (item.id !== adjusting.id) return item;
-        const nextStock = adjustType === 'increase' ? item.stock + amount : Math.max(item.stock - amount, 0);
         return { ...item, stock: nextStock };
       }),
     );

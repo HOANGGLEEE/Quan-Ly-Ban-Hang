@@ -1,7 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { formatCurrency, products, suppliers as seedSuppliers } from '../data/mockData';
+import React, { useEffect, useMemo, useState } from 'react';
+import { formatCurrency, products as seedProducts, suppliers as seedSuppliers } from '../data/mockData';
+import { api } from '../services/api';
 
 const QuanLyNhapKho = () => {
+  const [products, setProducts] = useState(seedProducts);
   const [suppliers, setSuppliers] = useState(seedSuppliers);
   const [receipts, setReceipts] = useState([
     { id: 'PN001', supplier: 'Samsung Việt Nam', product: 'Smart TV Samsung 55 inch 4K', quantity: 6, unitCost: 10800000, date: '2026-04-25', staff: 'Trần Quốc Bảo' },
@@ -10,16 +12,49 @@ const QuanLyNhapKho = () => {
   const [receiptForm, setReceiptForm] = useState(null);
   const [supplierForm, setSupplierForm] = useState(null);
 
+  useEffect(() => {
+    Promise.all([api.suppliers.list(), api.receipts.list(), api.products.list()])
+      .then(([supplierData, receiptData, productData]) => {
+        if (Array.isArray(supplierData)) setSuppliers(supplierData);
+        if (Array.isArray(receiptData)) {
+          setReceipts(receiptData.map((item) => ({
+            ...item,
+            supplier: item.supplierId,
+            product: item.productId || '',
+            quantity: item.quantity || 0,
+            unitCost: item.price || 0,
+            date: item.date?.slice?.(0, 10) || item.date,
+            staff: item.employeeId || '',
+          })));
+        }
+        if (Array.isArray(productData) && productData.length) setProducts(productData);
+      })
+      .catch(() => {});
+  }, []);
+
   const totalImport = useMemo(() => receipts.reduce((sum, item) => sum + item.quantity * item.unitCost, 0), [receipts]);
 
-  const saveReceipt = (event) => {
+  const saveReceipt = async (event) => {
     event.preventDefault();
+    const supplier = suppliers.find((item) => item.name === receiptForm.supplier || item.id === receiptForm.supplier);
+    await api.receipts.create({
+      MAPHIEUNHAP: receiptForm.id,
+      MANCC: supplier?.id || receiptForm.supplier,
+      NGAYLAP: receiptForm.date,
+    });
     setReceipts([...receipts, { ...receiptForm, quantity: Number(receiptForm.quantity), unitCost: Number(receiptForm.unitCost) }]);
     setReceiptForm(null);
   };
 
-  const saveSupplier = (event) => {
+  const saveSupplier = async (event) => {
     event.preventDefault();
+    await api.suppliers.create({
+      MaNCC: supplierForm.id,
+      TenNCC: supplierForm.name,
+      DiaChi: supplierForm.address,
+      SDT: supplierForm.phone,
+      EMAIL: supplierForm.email,
+    });
     setSuppliers([...suppliers, supplierForm]);
     setSupplierForm(null);
   };
@@ -33,7 +68,7 @@ const QuanLyNhapKho = () => {
         </div>
         <div className="actions">
           <button className="btn secondary" onClick={() => setSupplierForm({ id: `NCC${String(suppliers.length + 1).padStart(2, '0')}`, name: '', address: '', phone: '', email: '' })}>Thêm NCC</button>
-          <button className="btn" onClick={() => setReceiptForm({ id: `PN${String(receipts.length + 1).padStart(3, '0')}`, supplier: suppliers[0].name, product: products[0].name, quantity: 1, unitCost: products[0].price * 0.85, date: new Date().toISOString().slice(0, 10), staff: 'Trần Quốc Bảo' })}>Thêm phiếu nhập</button>
+          <button className="btn" onClick={() => setReceiptForm({ id: `PN${String(receipts.length + 1).padStart(3, '0')}`, supplier: suppliers[0]?.name || '', product: products[0]?.name || '', quantity: 1, unitCost: (products[0]?.price || 0) * 0.85, date: new Date().toISOString().slice(0, 10), staff: 'Trần Quốc Bảo' })}>Thêm phiếu nhập</button>
         </div>
       </header>
 
