@@ -72,11 +72,20 @@ export const api = {
   suppliers: {
     list: () => request('/QuanLyNhapKho/get-all-nhacungcap'),
     create: (data) => request('/QuanLyNhapKho/create-nhacungcap', { method: 'POST', body: body(data) }),
+    update: (data) => request('/QuanLyNhapKho/update-nhacungcap', { method: 'POST', body: body(data) }),
+    remove: (id) => request('/QuanLyNhapKho/del-nhacungcap', { method: 'DELETE', params: { maNCC: id } }),
   },
 
   receipts: {
     list: () => request('/QuanLyNhapKho/get-all-phieunhapkho'),
     create: (data) => request('/QuanLyNhapKho/create-phieunhapkho', { method: 'POST', body: body(data) }),
+    update: (data) => request('/QuanLyNhapKho/update-phieunhapkho', { method: 'POST', body: body(data) }),
+    remove: (id) => request('/QuanLyNhapKho/delete-phieunhapkho', { method: 'DELETE', params: { maPhieuNhap: id } }),
+  },
+
+  receiptDetails: {
+    list: () => request('/QuanLyNhapKho/get-all-chitietnhap'),
+    create: (data) => request('/QuanLyNhapKho/create-chitietnhap', { method: 'POST', body: body(data) }),
   },
 
   sales: {

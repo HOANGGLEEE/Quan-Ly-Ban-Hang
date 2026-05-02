@@ -68,7 +68,15 @@ const insertKhachHang = async (req, res) => {
 
 const getAllHoaDon = async (_req, res) => {
   try {
-    const invoices = (await rows("SELECT * FROM HOADONBAN")).map(mapHoaDon);
+    const invoices = (await rows(`
+      SELECT h.*, pay.DATHANHTOAN, pay.TRANGTHAI
+      FROM HOADONBAN h
+      LEFT JOIN (
+        SELECT MAHDBAN, SUM(ISNULL(SOTIENTHANHTOAN, 0)) AS DATHANHTOAN, MAX(TRANGTHAI) AS TRANGTHAI
+        FROM THANHTOAN
+        GROUP BY MAHDBAN
+      ) pay ON pay.MAHDBAN = h.MAHDBAN
+    `)).map(mapHoaDon);
     const details = (await rows("SELECT ct.*, sp.TENSP AS TenSP FROM CT_HDB ct LEFT JOIN SANPHAM sp ON sp.MASP = ct.MASP")).map(mapChiTietBan);
     const detailByInvoice = details.reduce((grouped, item) => {
       grouped[item.invoiceId] = grouped[item.invoiceId] || [];
@@ -148,6 +156,12 @@ const insertHoaDon = async (req, res) => {
         .input("donGia", donGia)
         .input("tongTien", soLuong * donGia)
         .query("INSERT INTO CT_HDB (MAHDBAN, MASP, SOLUONG, DONGIA, TONGTIEN) VALUES (@maHDBan, @masp, @soLuong, @donGia, @tongTien)");
+
+      const stock = new sql.Request(tx);
+      await stock
+        .input("masp", masp)
+        .input("soLuong", soLuong)
+        .query("UPDATE SANPHAM SET SOLUONGTON = ISNULL(SOLUONGTON, 0) - @soLuong WHERE MASP = @masp");
     }
     await tx.commit();
     ok(res, { id: maHDBan }, "Thêm hóa đơn thành công");

@@ -63,6 +63,16 @@ const QuanLyBanHang = () => {
   const handleCheckout = async () => {
     if (cart.length === 0) return;
     const invoiceId = `HD${Date.now().toString().slice(-5)}`;
+    const customerExists = customerList.some((item) => item.id === customer.id);
+    if (!customerExists && customer.id) {
+      await api.sales.createCustomer({
+        MAKH: customer.id,
+        TENKH: customer.name,
+        SDT: customer.phone,
+        DIACHI: customer.address,
+      });
+      setCustomerList((current) => [...current, customer]);
+    }
     await api.sales.createInvoice({
       MAHDBAN: invoiceId,
       MAKH: customer.id,
@@ -88,6 +98,12 @@ const QuanLyBanHang = () => {
       items: cart,
     });
     setCart([]);
+    setProducts((current) =>
+      current.map((product) => {
+        const sold = cart.find((item) => item.id === product.id);
+        return sold ? { ...product, stock: Math.max(Number(product.stock || 0) - sold.quantity, 0) } : product;
+      }),
+    );
   };
 
   return (

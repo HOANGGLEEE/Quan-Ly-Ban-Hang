@@ -19,13 +19,14 @@ const QuanLyCongNo = () => {
         const grouped = invoiceData.map((invoice) => {
           const customer = customersById[invoice.customerId] || {};
           const total = Number(invoice.subtotal || invoice.TONGTIENHANG || 0);
+          const paid = Number(invoice.paid || invoice.DATHANHTOAN || 0);
           return {
             id: invoice.id,
             customer: customer.name || invoice.customerId || 'Khách hàng',
             phone: customer.phone || '',
             invoices: 1,
             total,
-            paid: invoice.status === 'Đã thanh toán' ? total : 0,
+            paid,
           };
         });
         if (grouped.length) setDebts(grouped);
@@ -34,8 +35,19 @@ const QuanLyCongNo = () => {
   }, []);
   const filteredDebts = debts.filter((item) => item.customer.toLowerCase().includes(search.toLowerCase()) || item.phone.includes(search));
 
-  const markPaid = (id) => {
-    setDebts((current) => current.map((item) => (item.id === id ? { ...item, paid: item.total } : item)));
+  const markPaid = async (id) => {
+    const item = debts.find((debt) => debt.id === id);
+    if (!item) return;
+    const remain = item.total - item.paid;
+    if (remain <= 0) return;
+    await api.sales.createPayment({
+      id: `TT${Date.now().toString().slice(-5)}`,
+      invoiceId: id,
+      method: 'Tiền mặt',
+      amount: remain,
+      status: 'Đã thanh toán',
+    });
+    setDebts((current) => current.map((debt) => (debt.id === id ? { ...debt, paid: debt.total } : debt)));
   };
 
   return (

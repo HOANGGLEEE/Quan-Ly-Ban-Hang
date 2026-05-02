@@ -13,18 +13,22 @@ const QuanLyNhapKho = () => {
   const [supplierForm, setSupplierForm] = useState(null);
 
   useEffect(() => {
-    Promise.all([api.suppliers.list(), api.receipts.list(), api.products.list()])
-      .then(([supplierData, receiptData, productData]) => {
+    Promise.all([api.suppliers.list(), api.receipts.list(), api.receiptDetails.list(), api.products.list()])
+      .then(([supplierData, receiptData, detailData, productData]) => {
         if (Array.isArray(supplierData)) setSuppliers(supplierData);
         if (Array.isArray(receiptData)) {
+          const detailsByReceipt = Array.isArray(detailData)
+            ? Object.fromEntries(detailData.map((item) => [item.receiptId, item]))
+            : {};
           setReceipts(receiptData.map((item) => ({
             ...item,
             supplier: item.supplierId,
-            product: item.productId || '',
-            quantity: item.quantity || 0,
-            unitCost: item.price || 0,
+            product: item.productId || detailsByReceipt[item.id]?.productId || '',
+            quantity: detailsByReceipt[item.id]?.quantity || 0,
+            unitCost: detailsByReceipt[item.id]?.price || 0,
             date: item.date?.slice?.(0, 10) || item.date,
             staff: item.employeeId || '',
+            vat: item.vat || 0,
           })));
         }
         if (Array.isArray(productData) && productData.length) setProducts(productData);
@@ -37,10 +41,21 @@ const QuanLyNhapKho = () => {
   const saveReceipt = async (event) => {
     event.preventDefault();
     const supplier = suppliers.find((item) => item.name === receiptForm.supplier || item.id === receiptForm.supplier);
+    const product = products.find((item) => item.name === receiptForm.product || item.id === receiptForm.product);
     await api.receipts.create({
       MAPHIEUNHAP: receiptForm.id,
+      MASP: product?.id || receiptForm.product,
       MANCC: supplier?.id || receiptForm.supplier,
       NGAYLAP: receiptForm.date,
+      THUEVAT: 0,
+    });
+    await api.receiptDetails.create({
+      MAPHIEUNHAP: receiptForm.id,
+      MASP: product?.id || receiptForm.product,
+      SOLUONG: Number(receiptForm.quantity),
+      DONGIANHAP: Number(receiptForm.unitCost),
+      THANHTIEN: Number(receiptForm.quantity) * Number(receiptForm.unitCost),
+      NGAYNHAPKHO: receiptForm.date,
     });
     setReceipts([...receipts, { ...receiptForm, quantity: Number(receiptForm.quantity), unitCost: Number(receiptForm.unitCost) }]);
     setReceiptForm(null);
@@ -49,9 +64,9 @@ const QuanLyNhapKho = () => {
   const saveSupplier = async (event) => {
     event.preventDefault();
     await api.suppliers.create({
-      MaNCC: supplierForm.id,
-      TenNCC: supplierForm.name,
-      DiaChi: supplierForm.address,
+      MANCC: supplierForm.id,
+      TENNCC: supplierForm.name,
+      DIACHI: supplierForm.address,
       SDT: supplierForm.phone,
       EMAIL: supplierForm.email,
     });
@@ -81,7 +96,7 @@ const QuanLyNhapKho = () => {
         <h2 className="h2">Danh sách phiếu nhập</h2>
         <div className="table-wrap" style={{ marginTop: 14 }}>
           <table>
-            <thead><tr><th>Mã phiếu</th><th>Nhà cung cấp</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá nhập</th><th>Ngày nhập</th><th>Người lập</th></tr></thead>
+            <thead><tr><th>Mã phiếu</th><th>Nhà cung cấp</th><th>Sản phẩm</th><th>SL</th><th>Đơn giá nhập</th><th>Ngày lập</th><th>Người lập</th></tr></thead>
             <tbody>{receipts.map((item) => <tr key={item.id}><td>{item.id}</td><td>{item.supplier}</td><td>{item.product}</td><td>{item.quantity}</td><td>{formatCurrency(item.unitCost)}</td><td>{item.date}</td><td>{item.staff}</td></tr>)}</tbody>
           </table>
         </div>

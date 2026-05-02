@@ -14,7 +14,7 @@ module.exports = {
   getAllSanPham: wrap("SELECT * FROM SANPHAM", mapSanPham, "Lấy sản phẩm thành công"),
   getAllKhuyenMai: wrap("SELECT * FROM KHUYENMAI", mapKhuyenMai, "Lấy khuyến mãi thành công"),
   getAllPhieuNhapKho: wrap("SELECT * FROM PHIEUNHAPKHO", mapPhieuNhap, "Lấy phiếu nhập thành công"),
-  getAllChiTietNhap: wrap("SELECT * FROM CT_PNK", mapChiTietNhap, "Lấy chi tiết nhập thành công"),
+  getAllChiTietNhap: wrap("SELECT * FROM CHITIETNHAP", mapChiTietNhap, "Lấy chi tiết nhập thành công"),
   getAllHoaDon: wrap("SELECT * FROM HOADONBAN", mapHoaDon, "Lấy hóa đơn thành công"),
   getAllChiTietBan: wrap("SELECT * FROM CT_HDB", mapChiTietBan, "Lấy chi tiết bán thành công"),
 };

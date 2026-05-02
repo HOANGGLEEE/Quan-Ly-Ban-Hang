@@ -40,7 +40,6 @@ const mapNhanVien = (item) => ({
   name: item.TENNV,
   phone: item.SDT,
   address: item.DIACHI,
-  status: "Đang làm",
 });
 
 const mapTaiKhoan = (item) => ({
@@ -49,23 +48,22 @@ const mapTaiKhoan = (item) => ({
   username: item.USERNAME,
   role: roleMap[item.QUYEN] || String(item.QUYEN || ""),
   password: item.PASS,
-  status: "Hoạt động",
 });
 
 const mapKhuyenMai = (item) => ({
   ...item,
-  id: item.MaKM || item.MAKM,
-  name: item.TenKM || item.TENKM,
-  productId: item.MaSP || item.MASP,
-  startDate: item.NgayBD || item.NGAYBD,
-  endDate: item.NgayKT || item.NGAYKT,
+  id: item.MAKM,
+  name: item.TENKM,
+  productId: item.MASP,
+  startDate: item.NGAYBATDAU,
+  endDate: item.NGAYKETTHUC,
 });
 
 const mapNhaCungCap = (item) => ({
   ...item,
-  id: item.MaNCC || item.MANCC,
-  name: item.TenNCC || item.TENNCC,
-  address: item.DiaChi || item.DIACHI,
+  id: item.MANCC,
+  name: item.TENNCC,
+  address: item.DIACHI,
   phone: item.SDT,
   email: item.EMAIL,
 });
@@ -79,7 +77,8 @@ const mapHoaDon = (item) => ({
   subtotal: Number(item.TONGTIENHANG || 0),
   vat: Number(item.THUEVAT || 0),
   discount: Number(item.GIAMGIA || 0),
-  status: item.TrangThai || item.TRANGTHAI,
+  paid: Number(item.DATHANHTOAN || 0),
+  status: item.TRANGTHAI,
 });
 
 const mapChiTietBan = (item) => ({
@@ -94,20 +93,22 @@ const mapChiTietBan = (item) => ({
 
 const mapThanhToan = (item) => ({
   ...item,
-  id: item.MaThanhToan || item.MATHANHTOAN,
-  invoiceId: item.MaHDBan || item.MAHDBAN,
-  method: item.PhuongThuc || item.PHUONGTHUC,
-  amount: Number(item.SoTienThanhToan || item.SOTIENTHANHTOAN || 0),
-  date: item.NgayThanhToan || item.NGAYTHANHTOAN,
-  status: item.TrangThai || item.TRANGTHAI,
+  id: item.MATHANHTOAN,
+  invoiceId: item.MAHDBAN,
+  method: item.PHUONGTHUC,
+  amount: Number(item.SOTIENTHANHTOAN || 0),
+  date: item.NGAYTHANHTOAN,
+  status: item.TRANGTHAI,
 });
 
 const mapPhieuNhap = (item) => ({
   ...item,
   id: item.MAPHIEUNHAP,
+  productId: item.MASP,
   supplierId: item.MANCC,
   employeeId: item.MANV,
   date: item.NGAYLAP,
+  vat: Number(item.THUEVAT || 0),
 });
 
 const mapChiTietNhap = (item) => ({

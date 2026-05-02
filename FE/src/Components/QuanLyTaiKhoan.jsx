@@ -10,9 +10,9 @@ const roles = {
 
 const QuanLyTaiKhoan = () => {
   const [accounts, setAccounts] = useState([
-    { id: 'TK001', username: 'admin', role: 'admin', employee: 'Nguyễn Minh Anh', status: 'Hoạt động' },
-    { id: 'TK002', username: 'thungan01', role: 'cashier', employee: 'Nguyễn Minh Anh', status: 'Hoạt động' },
-    { id: 'TK003', username: 'thukho01', role: 'warehouse', employee: 'Trần Quốc Bảo', status: 'Hoạt động' },
+    { id: 'TK001', username: 'admin', role: 'admin' },
+    { id: 'TK002', username: 'thungan01', role: 'cashier' },
+    { id: 'TK003', username: 'thukho01', role: 'warehouse' },
   ]);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);
@@ -24,7 +24,7 @@ const QuanLyTaiKhoan = () => {
   const filteredAccounts = useMemo(() => {
     const keyword = search.toLowerCase();
     return accounts.filter((item) =>
-      [item.id, item.username, item.employee, roles[item.role]].some((value) => value.toLowerCase().includes(keyword)),
+      [item.id, item.username, roles[item.role] || item.role].some((value) => String(value || '').toLowerCase().includes(keyword)),
     );
   }, [accounts, search]);
 
@@ -49,25 +49,23 @@ const QuanLyTaiKhoan = () => {
           <p className="breadcrumbs">Quản trị / Tài khoản</p>
           <h1 className="h1">Quản lý tài khoản</h1>
         </div>
-        <button className="btn" onClick={() => setForm({ id: `TK${String(accounts.length + 1).padStart(3, '0')}`, username: '', role: 'cashier', employee: '', status: 'Hoạt động', password: '' })}>Thêm tài khoản</button>
+        <button className="btn" onClick={() => setForm({ id: `TK${String(accounts.length + 1).padStart(3, '0')}`, username: '', role: 'cashier', password: '' })}>Thêm tài khoản</button>
       </header>
 
       <section className="card">
         <div className="toolbar">
           <h2 className="h2">Danh sách tài khoản nhân viên</h2>
-          <input className="input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm mã, username, nhân viên..." style={{ maxWidth: 360 }} />
+          <input className="input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm mã, username, quyền..." style={{ maxWidth: 360 }} />
         </div>
         <div className="table-wrap" style={{ marginTop: 14 }}>
           <table>
-            <thead><tr><th>Mã TK</th><th>Username</th><th>Nhân viên</th><th>Quyền</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <thead><tr><th>Mã TK</th><th>Username</th><th>Quyền</th><th>Thao tác</th></tr></thead>
             <tbody>
               {filteredAccounts.map((item) => (
                 <tr key={item.id}>
                   <td>{item.id}</td>
                   <td>{item.username}</td>
-                  <td>{item.employee}</td>
-                  <td>{roles[item.role]}</td>
-                  <td><span className="badge success">{item.status}</span></td>
+                  <td>{roles[item.role] || item.role}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm({ ...item, password: '' })}>Sửa</button>
                     <button className="btn danger" onClick={async () => { await api.accounts.remove(item.id); setAccounts(accounts.filter((x) => x.id !== item.id)); }}>Xóa</button>
@@ -91,9 +89,7 @@ const QuanLyTaiKhoan = () => {
                 <div><label>Mã tài khoản</label><input className="input" value={form.id} readOnly /></div>
                 <div><label>Username</label><input className="input" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required /></div>
                 <div><label>Mật khẩu</label><input className="input" type="password" value={form.password || ''} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Nhập khi tạo hoặc đổi mật khẩu" /></div>
-                <div><label>Nhân viên</label><input className="input" value={form.employee} onChange={(e) => setForm({ ...form, employee: e.target.value })} required /></div>
                 <div><label>Quyền</label><select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>{Object.entries(roles).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></div>
-                <div><label>Trạng thái</label><select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}><option>Hoạt động</option><option>Khóa</option></select></div>
               </div>
               <div className="form-actions"><button type="button" className="btn secondary" onClick={() => setForm(null)}>Hủy</button><button className="btn">Lưu</button></div>
             </form>

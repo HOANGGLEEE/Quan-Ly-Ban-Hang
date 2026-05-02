@@ -10,6 +10,8 @@ VITE_API_BASE_URL=http://localhost:3000/api
 
 Backend khớp trực tiếp với FE là `BE/Project_QuanLyBanLe_Node`, vì backend này expose các route dạng `/api/QuanLySanPham/...`, `/api/Login/...`, `/api/QuanLyBanHang/...`.
 
+BE Node dùng cùng kiểu với dự án mẫu `Cong-nghe-web-va-Ung-dung-main`: Express + CORS + `mssql` + `dotenv`, kết nối SQL Server một lần khi start server rồi các controller dùng `sql.Request`, `query`, hoặc `execute` stored procedure.
+
 ## Chạy BE Node
 
 ```powershell
@@ -36,6 +38,13 @@ Nếu SQL Server nghe port cố định, dùng:
 ```env
 DB_SERVER=localhost
 DB_PORT=1433
+```
+
+Nếu `SQLEXPRESS` chạy port động và `SQL Server Browser` đang tắt, dùng port thực tế của instance, ví dụ máy hiện tại:
+
+```env
+DB_SERVER=localhost
+DB_PORT=63704
 ```
 
 ## Chạy FE

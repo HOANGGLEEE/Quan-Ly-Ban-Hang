@@ -3,10 +3,16 @@ const { mapKhuyenMai } = require("./retailMappers");
 
 module.exports = createCrudController({
   table: "KHUYENMAI",
-  idColumn: "MaKM",
+  idColumn: "MAKM",
   idParam: "maKM",
-  columns: ["MaKM", "TenKM", "MaSP", "NgayBD", "NgayKT"],
+  columns: ["MAKM", "TENKM", "MASP", "NGAYBATDAU", "NGAYKETTHUC"],
   mapper: mapKhuyenMai,
   labels: { table: "khuyến mãi" },
-  aliases: { MaKM: "id", TenKM: "name", MaSP: "productId", NgayBD: "startDate", NgayKT: "endDate" },
+  aliases: {
+    MAKM: "id",
+    TENKM: "name",
+    MASP: "productId",
+    NGAYBATDAU: "startDate",
+    NGAYKETTHUC: "endDate",
+  },
 });
