@@ -4,7 +4,8 @@ const { mapSanPham } = require("./retailMappers");
 
 const selectProducts = `
   SELECT sp.MASP, sp.TENSP, sp.MAVACH, sp.MOTA, sp.MADANHMUC, dm.TENDANHMUC,
-         sp.DONGIA, sp.THUOCTINH, sp.THUEVAT, sp.SOLUONGTON
+         sp.DONGIA, sp.THUOCTINH, sp.THUEVAT, sp.SOLUONGTON,
+         sp.HINHANH, sp.THUONGHIEU, sp.THOIGIANBAOHANH
   FROM SANPHAM sp
   LEFT JOIN DANHMUC dm ON dm.MADANHMUC = sp.MADANHMUC
 `;
@@ -13,7 +14,7 @@ const base = createCrudController({
   table: "SANPHAM",
   idColumn: "MASP",
   idParam: "maSP",
-  columns: ["MASP", "TENSP", "MAVACH", "MOTA", "MADANHMUC", "DONGIA", "THUOCTINH", "THUEVAT", "SOLUONGTON"],
+  columns: ["MASP", "TENSP", "MAVACH", "MOTA", "MADANHMUC", "DONGIA", "THUOCTINH", "THUEVAT", "SOLUONGTON", "HINHANH", "THUONGHIEU", "THOIGIANBAOHANH"],
   select: selectProducts,
   mapper: mapSanPham,
   labels: { table: "sản phẩm" },
@@ -27,6 +28,9 @@ const base = createCrudController({
     THUOCTINH: "attributes",
     THUEVAT: "vat",
     SOLUONGTON: "stock",
+    HINHANH: "image",
+    THUONGHIEU: "brand",
+    THOIGIANBAOHANH: "warrantyMonths",
   },
 });
 

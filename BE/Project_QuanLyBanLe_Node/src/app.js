@@ -13,6 +13,7 @@ const quanLySanPhamRoutes = require("./routes/quanLySanPhamRoutes");
 const quanLyTaiKhoanRoutes = require("./routes/quanLyTaiKhoanRoutes");
 const quanLyTonKhoRoutes = require("./routes/quanLyTonKhoRoutes");
 const baoCaoThongKeRoutes = require("./routes/baoCaoThongKeRoutes");
+const cuaHangRoutes = require("./routes/cuaHangRoutes");
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use("/api/QuanLySanPham", quanLySanPhamRoutes);
 app.use("/api/QuanLyTaiKhoan", quanLyTaiKhoanRoutes);
 app.use("/api/QuanLyTonKho", quanLyTonKhoRoutes);
 app.use("/api/BaoCaoThongKe", baoCaoThongKeRoutes);
+app.use("/api/CuaHang", cuaHangRoutes);
 
 module.exports = app;

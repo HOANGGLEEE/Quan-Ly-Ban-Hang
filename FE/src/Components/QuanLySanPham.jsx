@@ -5,12 +5,17 @@ import { api } from '../services/api';
 const blankProduct = {
   id: '',
   name: '',
-  category: 'Tivi',
+  categoryId: '',
+  category: '',
   barcode: '',
   price: 0,
   vat: 10,
   stock: 0,
   attributes: '',
+  description: '',
+  image: '',
+  brand: '',
+  warrantyMonths: 0,
 };
 
 const QuanLySanPham = () => {
@@ -36,13 +41,30 @@ const QuanLySanPham = () => {
     );
   }, [items, search]);
 
+  const nextProductId = () => {
+    const maxNumber = items.reduce((max, item) => {
+      const match = String(item.id || '').match(/^SP(\d+)$/i);
+      return match ? Math.max(max, Number(match[1])) : max;
+    }, 0);
+    return `SP${String(maxNumber + 1).padStart(3, '0')}`;
+  };
+
   const openAdd = () => {
-    setForm({ ...blankProduct, id: `SP${String(items.length + 1).padStart(3, '0')}` });
+    const defaultCategory = categoryItems[0] || {};
+    setForm({
+      ...blankProduct,
+      id: nextProductId(),
+      categoryId: defaultCategory.id || '',
+      category: defaultCategory.name || '',
+    });
     setModal('add');
   };
 
   const openEdit = (item) => {
-    setForm(item);
+    setForm({
+      ...item,
+      categoryId: item.categoryId || categoryItems.find((category) => category.name === item.category)?.id || '',
+    });
     setModal('edit');
   };
 
@@ -52,20 +74,23 @@ const QuanLySanPham = () => {
     const dbPayload = {
       MASP: payload.id,
       TENSP: payload.name,
-      MADANHMUC: payload.categoryId || categoryItems.find((item) => item.name === payload.category)?.id || payload.category,
+      MADANHMUC: payload.categoryId,
       MAVACH: payload.barcode,
       DONGIA: payload.price,
       THUEVAT: payload.vat,
       SOLUONGTON: payload.stock,
       THUOCTINH: payload.attributes,
       MOTA: payload.description || '',
+      HINHANH: payload.image || '',
+      THUONGHIEU: payload.brand || '',
+      THOIGIANBAOHANH: Number(payload.warrantyMonths) || 0,
     };
     if (modal === 'edit') await api.products.update(dbPayload);
     else await api.products.create(dbPayload);
     setItems((current) =>
       modal === 'edit'
-        ? current.map((item) => (item.id === payload.id ? payload : item))
-        : [...current, payload],
+        ? current.map((item) => (item.id === payload.id ? { ...payload, category: categoryItems.find((category) => category.id === payload.categoryId)?.name || payload.categoryId } : item))
+        : [...current, { ...payload, category: categoryItems.find((category) => category.id === payload.categoryId)?.name || payload.categoryId }],
     );
     setModal(null);
   };
@@ -96,10 +121,12 @@ const QuanLySanPham = () => {
                 <th>Mã SP</th>
                 <th>Tên sản phẩm</th>
                 <th>Danh mục</th>
+                <th>Thương hiệu</th>
                 <th>Mã vạch</th>
                 <th>Giá bán</th>
                 <th>VAT</th>
                 <th>Tồn</th>
+                <th>Bảo hành</th>
                 <th>Thuộc tính</th>
                 <th>Thao tác</th>
               </tr>
@@ -110,10 +137,12 @@ const QuanLySanPham = () => {
                   <td>{item.id}</td>
                   <td>{item.name}</td>
                   <td>{item.category}</td>
+                  <td>{item.brand}</td>
                   <td>{item.barcode}</td>
                   <td>{formatCurrency(item.price)}</td>
                   <td>{item.vat}%</td>
                   <td><span className={`badge ${item.stock <= 5 ? 'warn' : 'success'}`}>{item.stock}</span></td>
+                  <td>{item.warrantyMonths ? `${item.warrantyMonths} tháng` : ''}</td>
                   <td>{item.attributes}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => openEdit(item)}>Sửa</button>
@@ -137,12 +166,19 @@ const QuanLySanPham = () => {
               <div className="form-grid">
                 <div><label>Mã sản phẩm</label><input className="input" value={form.id} onChange={(e) => setForm({ ...form, id: e.target.value })} required readOnly={modal === 'edit'} /></div>
                 <div><label>Tên sản phẩm</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-                <div><label>Danh mục</label><select className="input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, categoryId: categoryItems.find((item) => item.name === e.target.value)?.id })}>{categoryItems.map((item) => <option key={item.id}>{item.name}</option>)}</select></div>
+                <div><label>Danh mục</label><select className="input" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value, category: categoryItems.find((item) => item.id === e.target.value)?.name || '' })} required>{categoryItems.map((item) => <option key={item.id} value={item.id}>{item.id} - {item.name}</option>)}</select></div>
                 <div><label>Mã vạch</label><input className="input" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} /></div>
+                <div><label>Thương hiệu</label><input className="input" value={form.brand || ''} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Samsung, LG, Asus..." /></div>
                 <div><label>Giá bán</label><input className="input" type="number" min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required /></div>
                 <div><label>Tồn kho</label><input className="input" type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} required /></div>
                 <div><label>VAT (%)</label><input className="input" type="number" min="0" max="100" value={form.vat} onChange={(e) => setForm({ ...form, vat: e.target.value })} /></div>
+                <div><label>Bảo hành (tháng)</label><input className="input" type="number" min="0" value={form.warrantyMonths || 0} onChange={(e) => setForm({ ...form, warrantyMonths: e.target.value })} /></div>
+                <div><label>Ảnh sản phẩm (URL)</label><input className="input" value={form.image || ''} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." /></div>
                 <div><label>Thuộc tính</label><input className="input" value={form.attributes} onChange={(e) => setForm({ ...form, attributes: e.target.value })} placeholder="VD: 55 inch - 4K" /></div>
+              </div>
+              <div style={{ marginTop: 14 }}>
+                <label>Mô tả</label>
+                <textarea className="input" rows="3" value={form.description || ''} onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
               <div className="form-actions">
                 <button type="button" className="btn secondary" onClick={() => setModal(null)}>Hủy</button>

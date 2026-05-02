@@ -29,6 +29,9 @@ const mapSanPham = (item) => ({
   stock: Number(item.SOLUONGTON || 0),
   attributes: trimValue(item.THUOCTINH),
   description: trimValue(item.MOTA),
+  image: trimValue(item.HINHANH),
+  brand: trimValue(item.THUONGHIEU),
+  warrantyMonths: Number(item.THOIGIANBAOHANH || 0),
 });
 
 const mapKhachHang = (item) => ({

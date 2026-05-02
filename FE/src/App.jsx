@@ -13,7 +13,12 @@ import QuanLyNhapKho from './Components/QuanLyNhapKho';
 import QuanLyCongNo from './Components/QuanLyCongNo';
 
 const App = () => {
-  const [currentView, setCurrentView] = useState('ban-hang');
+  const [user] = useState({ username: 'admin', role: 'admin' });
+  const [currentView, setCurrentView] = useState('san-pham');
+
+  const handleLogout = () => {
+    window.location.href = 'http://localhost:5174';
+  };
 
   const renderMainContent = () => {
     switch (currentView) {
@@ -34,7 +39,7 @@ const App = () => {
 
   return (
     <div className="app-shell">
-      <Sidebar currentView={currentView} setView={setCurrentView} />
+      <Sidebar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
       <main className="main">
         {renderMainContent()}
       </main>

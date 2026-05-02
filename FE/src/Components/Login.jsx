@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import hook chuyển trang
 import '../style/index.css';
 import { api } from '../services/api';
 
-const Login = () => {
-  const navigate = useNavigate(); // Khởi tạo hàm điều hướng
+const Login = ({ onLogin, onBack }) => {
   const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
@@ -20,8 +18,7 @@ const Login = () => {
         setError('Sai tài khoản hoặc mật khẩu.');
         return;
       }
-      localStorage.setItem('user', JSON.stringify(user));
-      navigate('/ban-hang');
+      onLogin(user);
     } catch (err) {
       setError(err.message || 'Không thể đăng nhập.');
     }
@@ -39,7 +36,7 @@ const Login = () => {
             name="username"
             type="text"
             className="input"
-            placeholder="Nhập tài khoản (bất kỳ)"
+            placeholder="Nhập tài khoản admin"
             required
             autoFocus
           />
@@ -51,13 +48,14 @@ const Login = () => {
               name="password"
               type="password"
               className="input"
-              placeholder="Nhập mật khẩu (bất kỳ)"
+              placeholder="Nhập mật khẩu"
               required
             />
           </div>
           {error && <p className="muted">{error}</p>}
           
           <button type="submit" className="btn-submit">Đăng nhập</button>
+          {onBack && <button type="button" className="btn secondary" onClick={onBack} style={{ width: '100%', marginTop: 10 }}>Quay lại cửa hàng</button>}
         </form>
       </section>
     </div>

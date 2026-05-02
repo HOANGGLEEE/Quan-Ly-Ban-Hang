@@ -48,6 +48,13 @@ export const api = {
     remove: (id) => request('/QuanLySanPham/delete-sanpham', { method: 'DELETE', params: { maSP: id } }),
   },
 
+  store: {
+    products: () => request('/CuaHang/products'),
+    createOrder: (data) => request('/CuaHang/orders', { method: 'POST', body: body(data) }),
+    orders: () => request('/CuaHang/orders'),
+    updateOrderStatus: (data) => request('/CuaHang/orders/status', { method: 'POST', body: body(data) }),
+  },
+
   employees: {
     list: () => request('/QuanLyNhanVien/get-all-nhanvien'),
     create: (data) => request('/QuanLyNhanVien/create-nhanvien', { method: 'POST', body: body(data) }),
