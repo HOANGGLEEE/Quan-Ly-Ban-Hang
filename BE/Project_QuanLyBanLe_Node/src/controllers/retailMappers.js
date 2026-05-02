@@ -5,74 +5,79 @@ const roleMap = {
   4: "accountant",
 };
 
+const trimValue = (value) => (typeof value === "string" ? value.trim() : value);
+
+const trimRow = (item) =>
+  Object.fromEntries(Object.entries(item).map(([key, value]) => [key, trimValue(value)]));
+
 const mapDanhMuc = (item) => ({
-  ...item,
-  id: item.MADANHMUC,
-  name: item.TENDANHMUC,
-  description: item.MOTA,
+  ...trimRow(item),
+  id: trimValue(item.MADANHMUC),
+  name: trimValue(item.TENDANHMUC),
+  description: trimValue(item.MOTA),
 });
 
 const mapSanPham = (item) => ({
-  ...item,
-  id: item.MASP,
-  name: item.TENSP,
-  categoryId: item.MADANHMUC,
-  category: item.TENDANHMUC || item.MADANHMUC,
-  barcode: item.MAVACH,
+  ...trimRow(item),
+  id: trimValue(item.MASP),
+  name: trimValue(item.TENSP),
+  categoryId: trimValue(item.MADANHMUC),
+  category: trimValue(item.TENDANHMUC) || trimValue(item.MADANHMUC),
+  barcode: trimValue(item.MAVACH),
   price: Number(item.DONGIA || 0),
   vat: Number(item.THUEVAT ?? item.THUE ?? 0),
   stock: Number(item.SOLUONGTON || 0),
-  attributes: item.THUOCTINH,
-  description: item.MOTA,
+  attributes: trimValue(item.THUOCTINH),
+  description: trimValue(item.MOTA),
 });
 
 const mapKhachHang = (item) => ({
-  ...item,
-  id: item.MaKH || item.MAKH,
-  name: item.TenKH || item.TENKH,
-  phone: item.SDT,
-  address: item.DiaChi || item.DIACHI,
+  ...trimRow(item),
+  id: trimValue(item.MaKH || item.MAKH),
+  name: trimValue(item.TenKH || item.TENKH),
+  phone: trimValue(item.SDT),
+  address: trimValue(item.DiaChi || item.DIACHI),
 });
 
 const mapNhanVien = (item) => ({
-  ...item,
-  id: item.MANV,
-  name: item.TENNV,
-  phone: item.SDT,
-  address: item.DIACHI,
+  ...trimRow(item),
+  id: trimValue(item.MANV),
+  name: trimValue(item.TENNV),
+  phone: trimValue(item.SDT),
+  address: trimValue(item.DIACHI),
 });
 
 const mapTaiKhoan = (item) => ({
-  ...item,
-  id: item.MATAIKHOAN,
-  username: item.USERNAME,
+  ...trimRow(item),
+  id: trimValue(item.MATAIKHOAN),
+  username: trimValue(item.USERNAME),
   role: roleMap[item.QUYEN] || String(item.QUYEN || ""),
-  password: item.PASS,
+  password: trimValue(item.PASS),
 });
 
 const mapKhuyenMai = (item) => ({
-  ...item,
-  id: item.MAKM,
-  name: item.TENKM,
-  productId: item.MASP,
+  ...trimRow(item),
+  id: trimValue(item.MAKM),
+  name: trimValue(item.TENKM),
+  productId: trimValue(item.MASP),
   startDate: item.NGAYBATDAU,
   endDate: item.NGAYKETTHUC,
 });
 
 const mapNhaCungCap = (item) => ({
-  ...item,
-  id: item.MANCC,
-  name: item.TENNCC,
-  address: item.DIACHI,
-  phone: item.SDT,
-  email: item.EMAIL,
+  ...trimRow(item),
+  id: trimValue(item.MANCC),
+  name: trimValue(item.TENNCC),
+  address: trimValue(item.DIACHI),
+  phone: trimValue(item.SDT),
+  email: trimValue(item.EMAIL),
 });
 
 const mapHoaDon = (item) => ({
-  ...item,
-  id: item.MAHDBAN,
-  employeeId: item.MANV,
-  customerId: item.MAKH,
+  ...trimRow(item),
+  id: trimValue(item.MAHDBAN),
+  employeeId: trimValue(item.MANV),
+  customerId: trimValue(item.MAKH),
   date: item.NGAYLAP,
   subtotal: Number(item.TONGTIENHANG || 0),
   vat: Number(item.THUEVAT || 0),
@@ -82,39 +87,39 @@ const mapHoaDon = (item) => ({
 });
 
 const mapChiTietBan = (item) => ({
-  ...item,
-  invoiceId: item.MAHDBAN,
-  productId: item.MASP,
-  name: item.TenSP || item.TENSP,
+  ...trimRow(item),
+  invoiceId: trimValue(item.MAHDBAN),
+  productId: trimValue(item.MASP),
+  name: trimValue(item.TenSP || item.TENSP),
   quantity: Number(item.SOLUONG || 0),
   price: Number(item.DONGIA || 0),
   total: Number(item.TONGTIEN || 0),
 });
 
 const mapThanhToan = (item) => ({
-  ...item,
-  id: item.MATHANHTOAN,
-  invoiceId: item.MAHDBAN,
-  method: item.PHUONGTHUC,
+  ...trimRow(item),
+  id: trimValue(item.MATHANHTOAN),
+  invoiceId: trimValue(item.MAHDBAN),
+  method: trimValue(item.PHUONGTHUC),
   amount: Number(item.SOTIENTHANHTOAN || 0),
   date: item.NGAYTHANHTOAN,
-  status: item.TRANGTHAI,
+  status: trimValue(item.TRANGTHAI),
 });
 
 const mapPhieuNhap = (item) => ({
-  ...item,
-  id: item.MAPHIEUNHAP,
-  productId: item.MASP,
-  supplierId: item.MANCC,
-  employeeId: item.MANV,
+  ...trimRow(item),
+  id: trimValue(item.MAPHIEUNHAP),
+  productId: trimValue(item.MASP),
+  supplierId: trimValue(item.MANCC),
+  employeeId: trimValue(item.MANV),
   date: item.NGAYLAP,
   vat: Number(item.THUEVAT || 0),
 });
 
 const mapChiTietNhap = (item) => ({
-  ...item,
-  receiptId: item.MAPHIEUNHAP,
-  productId: item.MASP,
+  ...trimRow(item),
+  receiptId: trimValue(item.MAPHIEUNHAP),
+  productId: trimValue(item.MASP),
   quantity: Number(item.SOLUONG || 0),
   price: Number(item.DONGIANHAP || 0),
   total: Number(item.THANHTIEN || 0),
