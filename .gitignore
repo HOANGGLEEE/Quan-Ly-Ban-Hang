@@ -54,6 +54,7 @@ build/
 dist/
 .env
 .env.*
+!.env.example
 
 # Ignore build outputs
 bin/
