@@ -1,4 +1,4 @@
-const { ok, fail, rows, execute, parseBody } = require("../utils/sqlHelpers");
+const { ok, fail, rows, execute, parseBody, first } = require("../utils/sqlHelpers");
 const { createCrudController } = require("./crudFactory");
 const { mapSanPham } = require("./retailMappers");
 
@@ -40,6 +40,7 @@ const updateSoLuong = async (req, res) => {
     const maSP = body.MASP || req.query.maSP || req.query.id;
     const soLuongMoi = body.SOLUONGTON ?? req.query.soLuongMoi ?? req.body.soLuongMoi;
     if (!maSP || soLuongMoi === undefined) return fail(res, 400, "Thiếu maSP hoặc soLuongMoi");
+    if (Number(soLuongMoi) < 0) return fail(res, 400, "Số lượng tồn không được âm");
 
     const affected = await execute("UPDATE SANPHAM SET SOLUONGTON = @soLuongMoi WHERE MASP = @maSP", {
       maSP,
@@ -48,6 +49,34 @@ const updateSoLuong = async (req, res) => {
     ok(res, { affected }, "Cập nhật số lượng thành công");
   } catch (err) {
     fail(res, 500, "Lỗi cập nhật số lượng", err.message);
+  }
+};
+
+const remove = async (req, res) => {
+  try {
+    const id = req.query.maSP || req.query.id || req.params.id;
+    if (!id) return fail(res, 400, "Thiếu maSP");
+
+    const checks = [
+      first("SELECT TOP 1 MASP FROM CT_HDB WHERE MASP = @id", { id }),
+      first("SELECT TOP 1 MASP FROM CHITIETNHAP WHERE MASP = @id", { id }),
+      first("SELECT TOP 1 MASP FROM KHUYENMAI WHERE MASP = @id", { id }),
+    ];
+    const [invoiceDetail, receiptDetail, promotion] = await Promise.all(checks);
+    if (invoiceDetail || receiptDetail || promotion) {
+      return fail(res, 400, "Không thể xóa sản phẩm đã phát sinh hóa đơn, phiếu nhập hoặc khuyến mãi");
+    }
+
+    const hasOrderTable = await first("SELECT OBJECT_ID('dbo.CHITIETDONHANG', 'U') AS objectId");
+    if (hasOrderTable?.objectId) {
+      const orderDetail = await first("SELECT TOP 1 MASP FROM CHITIETDONHANG WHERE MASP = @id", { id });
+      if (orderDetail) return fail(res, 400, "Không thể xóa sản phẩm đã phát sinh đơn hàng online");
+    }
+
+    const affected = await execute("DELETE FROM SANPHAM WHERE MASP = @id", { id });
+    ok(res, { affected }, "Xóa sản phẩm thành công");
+  } catch (err) {
+    fail(res, 500, "Lỗi xóa sản phẩm", err.message);
   }
 };
 
@@ -60,4 +89,4 @@ const getLowStock = async (_req, res) => {
   }
 };
 
-module.exports = { ...base, updateSoLuong, getLowStock };
+module.exports = { ...base, updateSoLuong, getLowStock, remove };

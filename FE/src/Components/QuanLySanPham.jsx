@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { categories, formatCurrency, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const blankProduct = {
   id: '',
@@ -25,13 +26,18 @@ const QuanLySanPham = () => {
   const [modal, setModal] = useState(null);
   const [form, setForm] = useState(blankProduct);
 
-  useEffect(() => {
-    Promise.all([api.products.list(), api.categories.list()])
-      .then(([productData, categoryData]) => {
+  const loadProducts = async () => {
+    try {
+      const [productData, categoryData] = await Promise.all([api.products.list(), api.categories.list()]);
         if (Array.isArray(productData)) setItems(productData);
         if (Array.isArray(categoryData)) setCategoryItems(categoryData);
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải sản phẩm');
+    }
+  };
+
+  useEffect(() => {
+    void Promise.resolve().then(loadProducts);
   }, []);
 
   const filteredItems = useMemo(() => {
@@ -85,14 +91,25 @@ const QuanLySanPham = () => {
       THUONGHIEU: payload.brand || '',
       THOIGIANBAOHANH: Number(payload.warrantyMonths) || 0,
     };
-    if (modal === 'edit') await api.products.update(dbPayload);
-    else await api.products.create(dbPayload);
-    setItems((current) =>
-      modal === 'edit'
-        ? current.map((item) => (item.id === payload.id ? { ...payload, category: categoryItems.find((category) => category.id === payload.categoryId)?.name || payload.categoryId } : item))
-        : [...current, { ...payload, category: categoryItems.find((category) => category.id === payload.categoryId)?.name || payload.categoryId }],
-    );
-    setModal(null);
+    try {
+      if (modal === 'edit') await api.products.update(dbPayload);
+      else await api.products.create(dbPayload);
+      await loadProducts();
+      notifySuccess(modal === 'edit' ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm');
+      setModal(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu sản phẩm');
+    }
+  };
+
+  const removeProduct = async (id) => {
+    try {
+      await api.products.remove(id);
+      await loadProducts();
+      notifySuccess('Đã xóa sản phẩm');
+    } catch (error) {
+      notifyError(error, 'Không thể xóa sản phẩm');
+    }
   };
 
   return (
@@ -146,7 +163,7 @@ const QuanLySanPham = () => {
                   <td>{item.attributes}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => openEdit(item)}>Sửa</button>
-                    <button className="btn danger" onClick={async () => { await api.products.remove(item.id); setItems(items.filter((x) => x.id !== item.id)); }}>Xóa</button>
+                    <button className="btn danger" onClick={() => removeProduct(item.id)}>Xóa</button>
                   </td>
                 </tr>
               ))}

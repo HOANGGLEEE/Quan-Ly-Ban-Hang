@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatCurrency, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const QuanLyTonKho = () => {
   const [items, setItems] = useState(seedProducts);
@@ -8,8 +9,17 @@ const QuanLyTonKho = () => {
   const [adjustType, setAdjustType] = useState('increase');
   const [quantity, setQuantity] = useState(1);
 
+  const loadStock = async () => {
+    try {
+      const data = await api.products.list();
+      if (Array.isArray(data)) setItems(data);
+    } catch (error) {
+      notifyError(error, 'Không thể tải tồn kho');
+    }
+  };
+
   useEffect(() => {
-    api.products.list().then((data) => Array.isArray(data) && setItems(data)).catch(() => {});
+    void Promise.resolve().then(loadStock);
   }, []);
 
   const lowStock = useMemo(() => items.filter((item) => item.stock <= 7).length, [items]);
@@ -19,15 +29,15 @@ const QuanLyTonKho = () => {
     event.preventDefault();
     const amount = Math.max(Number(quantity) || 1, 1);
     const nextStock = adjustType === 'increase' ? adjusting.stock + amount : Math.max(adjusting.stock - amount, 0);
-    await api.products.updateStock(adjusting.id, nextStock);
-    setItems((current) =>
-      current.map((item) => {
-        if (item.id !== adjusting.id) return item;
-        return { ...item, stock: nextStock };
-      }),
-    );
-    setAdjusting(null);
-    setQuantity(1);
+    try {
+      await api.products.updateStock(adjusting.id, nextStock);
+      await loadStock();
+      notifySuccess('Đã cập nhật tồn kho');
+      setAdjusting(null);
+      setQuantity(1);
+    } catch (error) {
+      notifyError(error, 'Không thể cập nhật tồn kho');
+    }
   };
 
   return (

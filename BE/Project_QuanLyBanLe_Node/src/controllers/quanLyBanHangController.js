@@ -124,6 +124,8 @@ const insertHoaDon = async (req, res) => {
   const tx = new sql.Transaction();
   try {
     const items = req.body.listjson_chitietban || req.body.items || [];
+    if (!Array.isArray(items) || !items.length) return fail(res, 400, "Hóa đơn phải có ít nhất một sản phẩm");
+
     const maHDBan = req.body.MAHDBAN || req.body.id || `HD${Date.now()}`;
     const manv = req.body.MANV || req.body.employeeId || null;
     const makh = req.body.MAKH || req.body.customerId || null;
@@ -149,6 +151,27 @@ const insertHoaDon = async (req, res) => {
       const masp = item.MASP || item.productId || item.id;
       const soLuong = Number(item.SOLUONG ?? item.quantity ?? 0);
       const donGia = Number(item.DONGIA ?? item.price ?? 0);
+      if (!masp || soLuong <= 0) {
+        const error = new Error("Thông tin sản phẩm trong hóa đơn không hợp lệ");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const inventory = await new sql.Request(tx)
+        .input("masp", masp)
+        .query("SELECT TENSP, ISNULL(SOLUONGTON, 0) AS SOLUONGTON FROM SANPHAM WITH (UPDLOCK, ROWLOCK) WHERE MASP = @masp");
+      const product = inventory.recordset?.[0];
+      if (!product) {
+        const error = new Error(`Không tìm thấy sản phẩm ${masp}`);
+        error.statusCode = 400;
+        throw error;
+      }
+      if (Number(product.SOLUONGTON) < soLuong) {
+        const error = new Error(`Sản phẩm ${product.TENSP || masp} chỉ còn ${product.SOLUONGTON} trong kho`);
+        error.statusCode = 400;
+        throw error;
+      }
+
       await detail
         .input("maHDBan", maHDBan)
         .input("masp", masp)
@@ -167,7 +190,7 @@ const insertHoaDon = async (req, res) => {
     ok(res, { id: maHDBan }, "Thêm hóa đơn thành công");
   } catch (err) {
     try { await tx.rollback(); } catch (_rollbackErr) {}
-    fail(res, 500, "Lỗi thêm hóa đơn", err.message);
+    fail(res, err.statusCode || 500, "Lỗi thêm hóa đơn", err.message);
   }
 };
 
@@ -179,6 +202,22 @@ const insertThanhToan = async (req, res) => {
     const soTien = req.body.SoTienThanhToan ?? req.body.amount ?? 0;
     const ngay = req.body.NgayThanhToan || req.body.date || new Date();
     const trangThai = req.body.TrangThai || req.body.status || "Đã thanh toán";
+    if (!maHDBan) return fail(res, 400, "Thiếu mã hóa đơn");
+    if (Number(soTien) <= 0) return fail(res, 400, "Số tiền thanh toán phải lớn hơn 0");
+
+    const invoice = await rows(`
+      SELECT h.MAHDBAN, ISNULL(h.TONGTIENHANG, 0) AS TONGTIENHANG,
+             ISNULL(SUM(t.SOTIENTHANHTOAN), 0) AS DATHANHTOAN
+      FROM HOADONBAN h
+      LEFT JOIN THANHTOAN t ON t.MAHDBAN = h.MAHDBAN
+      WHERE h.MAHDBAN = @maHDBan
+      GROUP BY h.MAHDBAN, h.TONGTIENHANG
+    `, { maHDBan });
+    if (!invoice.length) return fail(res, 400, "Hóa đơn thanh toán không tồn tại");
+
+    const remain = Number(invoice[0].TONGTIENHANG || 0) - Number(invoice[0].DATHANHTOAN || 0);
+    if (Number(soTien) > remain) return fail(res, 400, `Số tiền thanh toán vượt số còn nợ ${remain}`);
+
     const affected = await execute(
       "INSERT INTO THANHTOAN (MaThanhToan, MaHDBan, PhuongThuc, SoTienThanhToan, NgayThanhToan, TrangThai) VALUES (@id, @maHDBan, @phuongThuc, @soTien, @ngay, @trangThai)",
       { id, maHDBan, phuongThuc, soTien, ngay, trangThai },

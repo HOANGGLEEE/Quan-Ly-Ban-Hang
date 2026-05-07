@@ -1,8 +1,8 @@
 const roleMap = {
-  1: "admin",
+  1: "accountant",
   2: "cashier",
   3: "warehouse",
-  4: "accountant",
+  4: "admin",
 };
 
 const trimValue = (value) => (typeof value === "string" ? value.trim() : value);

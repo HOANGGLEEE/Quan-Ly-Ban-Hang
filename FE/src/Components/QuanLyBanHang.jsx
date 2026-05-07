@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatCurrency, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const customers = {
   KH001: { id: 'KH001', name: 'Nguyễn Văn A', phone: '0909009001', address: 'Quận 1, TP. Hồ Chí Minh' },
@@ -18,16 +19,21 @@ const QuanLyBanHang = () => {
   const [paymentMethod, setPaymentMethod] = useState('Tiền mặt');
   const [paidInvoice, setPaidInvoice] = useState(null);
 
-  useEffect(() => {
-    Promise.all([api.products.list(), api.sales.customers()])
-      .then(([productData, customerData]) => {
+  const loadSalesData = async () => {
+    try {
+      const [productData, customerData] = await Promise.all([api.products.list(), api.sales.customers()]);
         if (Array.isArray(productData) && productData.length) {
           setProducts(productData);
           setProductId(productData[0].id);
         }
         if (Array.isArray(customerData)) setCustomerList(customerData);
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải dữ liệu bán hàng');
+    }
+  };
+
+  useEffect(() => {
+    void Promise.resolve().then(loadSalesData);
   }, []);
 
   const subtotal = useMemo(
@@ -62,48 +68,46 @@ const QuanLyBanHang = () => {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    const invoiceId = `HD${Date.now().toString().slice(-5)}`;
-    const customerExists = customerList.some((item) => item.id === customer.id);
-    if (!customerExists && customer.id) {
-      await api.sales.createCustomer({
+    try {
+      const invoiceId = `HD${Date.now().toString().slice(-5)}`;
+      const customerExists = customerList.some((item) => item.id === customer.id);
+      if (!customerExists && customer.id) {
+        await api.sales.createCustomer({
+          MAKH: customer.id,
+          TENKH: customer.name,
+          SDT: customer.phone,
+          DIACHI: customer.address,
+        });
+      }
+      await api.sales.createInvoice({
+        MAHDBAN: invoiceId,
         MAKH: customer.id,
-        TENKH: customer.name,
-        SDT: customer.phone,
-        DIACHI: customer.address,
+        NGAYLAP: new Date().toISOString(),
+        THUEVAT: vat,
+        GIAMGIA: 0,
+        items: cart.map((item) => ({ productId: item.id, quantity: item.quantity, price: item.price })),
       });
-      setCustomerList((current) => [...current, customer]);
+      await api.sales.createPayment({
+        invoiceId,
+        method: paymentMethod,
+        amount: total,
+        status: 'Đã thanh toán',
+      });
+      setPaidInvoice({
+        id: invoiceId,
+        customer,
+        paymentMethod,
+        subtotal,
+        vat,
+        total,
+        items: cart,
+      });
+      setCart([]);
+      await loadSalesData();
+      notifySuccess('Đã thanh toán hóa đơn');
+    } catch (error) {
+      notifyError(error, 'Không thể thanh toán hóa đơn');
     }
-    await api.sales.createInvoice({
-      MAHDBAN: invoiceId,
-      MAKH: customer.id,
-      NGAYLAP: new Date().toISOString(),
-      THUEVAT: vat,
-      GIAMGIA: 0,
-      items: cart.map((item) => ({ productId: item.id, quantity: item.quantity, price: item.price })),
-    });
-    await api.sales.createPayment({
-      id: `TT${Date.now().toString().slice(-5)}`,
-      invoiceId,
-      method: paymentMethod,
-      amount: total,
-      status: 'Đã thanh toán',
-    });
-    setPaidInvoice({
-      id: invoiceId,
-      customer,
-      paymentMethod,
-      subtotal,
-      vat,
-      total,
-      items: cart,
-    });
-    setCart([]);
-    setProducts((current) =>
-      current.map((product) => {
-        const sold = cart.find((item) => item.id === product.id);
-        return sold ? { ...product, stock: Math.max(Number(product.stock || 0) - sold.quantity, 0) } : product;
-      }),
-    );
   };
 
   return (

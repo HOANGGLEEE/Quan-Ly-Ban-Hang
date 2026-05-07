@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatCurrency, products as seedProducts, suppliers as seedSuppliers } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const QuanLyNhapKho = () => {
   const [products, setProducts] = useState(seedProducts);
@@ -12,9 +13,14 @@ const QuanLyNhapKho = () => {
   const [receiptForm, setReceiptForm] = useState(null);
   const [supplierForm, setSupplierForm] = useState(null);
 
-  useEffect(() => {
-    Promise.all([api.suppliers.list(), api.receipts.list(), api.receiptDetails.list(), api.products.list()])
-      .then(([supplierData, receiptData, detailData, productData]) => {
+  const loadWarehouseData = async () => {
+    try {
+      const [supplierData, receiptData, detailData, productData] = await Promise.all([
+        api.suppliers.list(),
+        api.receipts.list(),
+        api.receiptDetails.list(),
+        api.products.list(),
+      ]);
         if (Array.isArray(supplierData)) setSuppliers(supplierData);
         if (Array.isArray(receiptData)) {
           const detailsByReceipt = Array.isArray(detailData)
@@ -32,8 +38,13 @@ const QuanLyNhapKho = () => {
           })));
         }
         if (Array.isArray(productData) && productData.length) setProducts(productData);
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải dữ liệu nhập kho');
+    }
+  };
+
+  useEffect(() => {
+    void Promise.resolve().then(loadWarehouseData);
   }, []);
 
   const totalImport = useMemo(() => receipts.reduce((sum, item) => sum + item.quantity * item.unitCost, 0), [receipts]);
@@ -42,36 +53,46 @@ const QuanLyNhapKho = () => {
     event.preventDefault();
     const supplier = suppliers.find((item) => item.name === receiptForm.supplier || item.id === receiptForm.supplier);
     const product = products.find((item) => item.name === receiptForm.product || item.id === receiptForm.product);
-    await api.receipts.create({
-      MAPHIEUNHAP: receiptForm.id,
-      MASP: product?.id || receiptForm.product,
-      MANCC: supplier?.id || receiptForm.supplier,
-      NGAYLAP: receiptForm.date,
-      THUEVAT: 0,
-    });
-    await api.receiptDetails.create({
-      MAPHIEUNHAP: receiptForm.id,
-      MASP: product?.id || receiptForm.product,
-      SOLUONG: Number(receiptForm.quantity),
-      DONGIANHAP: Number(receiptForm.unitCost),
-      THANHTIEN: Number(receiptForm.quantity) * Number(receiptForm.unitCost),
-      NGAYNHAPKHO: receiptForm.date,
-    });
-    setReceipts([...receipts, { ...receiptForm, quantity: Number(receiptForm.quantity), unitCost: Number(receiptForm.unitCost) }]);
-    setReceiptForm(null);
+    try {
+      await api.receipts.create({
+        MAPHIEUNHAP: receiptForm.id,
+        MASP: product?.id || receiptForm.product,
+        MANCC: supplier?.id || receiptForm.supplier,
+        NGAYLAP: receiptForm.date,
+        THUEVAT: 0,
+      });
+      await api.receiptDetails.create({
+        MAPHIEUNHAP: receiptForm.id,
+        MASP: product?.id || receiptForm.product,
+        SOLUONG: Number(receiptForm.quantity),
+        DONGIANHAP: Number(receiptForm.unitCost),
+        THANHTIEN: Number(receiptForm.quantity) * Number(receiptForm.unitCost),
+        NGAYNHAPKHO: receiptForm.date,
+      });
+      await loadWarehouseData();
+      notifySuccess('Đã lưu phiếu nhập và cập nhật tồn kho');
+      setReceiptForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu phiếu nhập');
+    }
   };
 
   const saveSupplier = async (event) => {
     event.preventDefault();
-    await api.suppliers.create({
-      MANCC: supplierForm.id,
-      TENNCC: supplierForm.name,
-      DIACHI: supplierForm.address,
-      SDT: supplierForm.phone,
-      EMAIL: supplierForm.email,
-    });
-    setSuppliers([...suppliers, supplierForm]);
-    setSupplierForm(null);
+    try {
+      await api.suppliers.create({
+        MANCC: supplierForm.id,
+        TENNCC: supplierForm.name,
+        DIACHI: supplierForm.address,
+        SDT: supplierForm.phone,
+        EMAIL: supplierForm.email,
+      });
+      await loadWarehouseData();
+      notifySuccess('Đã thêm nhà cung cấp');
+      setSupplierForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể thêm nhà cung cấp');
+    }
   };
 
   return (

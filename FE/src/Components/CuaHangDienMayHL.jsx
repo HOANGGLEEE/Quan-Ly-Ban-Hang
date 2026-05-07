@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { formatCurrency, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const defaultCustomer = { id: '', name: '', phone: '', address: '' };
 
@@ -14,10 +15,17 @@ const CuaHangDienMayHL = ({ onLoginClick }) => {
   const [note, setNote] = useState('');
   const [result, setResult] = useState(null);
 
+  const loadStoreProducts = async () => {
+    try {
+      const data = await api.store.products();
+      if (Array.isArray(data)) setProducts(data);
+    } catch (error) {
+      notifyError(error, 'Không thể tải sản phẩm cửa hàng');
+    }
+  };
+
   useEffect(() => {
-    api.store.products()
-      .then((data) => Array.isArray(data) && setProducts(data))
-      .catch(() => {});
+    void Promise.resolve().then(loadStoreProducts);
   }, []);
 
   const categories = useMemo(
@@ -64,21 +72,21 @@ const CuaHangDienMayHL = ({ onLoginClick }) => {
     event.preventDefault();
     if (!cart.length) return;
 
-    const order = await api.store.createOrder({
-      customer: { ...customer, id: customer.id.trim().toUpperCase() },
-      shippingAddress: customer.address,
-      note,
-      items: cart.map((item) => ({ productId: item.id, quantity: item.quantity, price: item.price })),
-    });
+    try {
+      const order = await api.store.createOrder({
+        customer: { ...customer, id: customer.id.trim().toUpperCase() },
+        shippingAddress: customer.address,
+        note,
+        items: cart.map((item) => ({ productId: item.id, quantity: item.quantity, price: item.price })),
+      });
 
-    setResult(order);
-    setProducts((current) =>
-      current.map((product) => {
-        const sold = cart.find((item) => item.id === product.id);
-        return sold ? { ...product, stock: Math.max(Number(product.stock || 0) - sold.quantity, 0) } : product;
-      }),
-    );
-    setCart([]);
+      setResult(order);
+      setCart([]);
+      await loadStoreProducts();
+      notifySuccess('Đã tạo đơn hàng');
+    } catch (error) {
+      notifyError(error, 'Không thể tạo đơn hàng');
+    }
   };
 
   return (

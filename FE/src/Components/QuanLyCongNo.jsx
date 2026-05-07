@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatCurrency } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const seedDebts = [
   { id: 'CN001', customer: 'Công ty An Phát', phone: '0283999888', invoices: 1, total: 41970000, paid: 20000000 },
@@ -11,9 +12,9 @@ const QuanLyCongNo = () => {
   const [debts, setDebts] = useState(seedDebts);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    Promise.all([api.sales.invoices(), api.sales.customers()])
-      .then(([invoiceData, customerData]) => {
+  const loadDebts = async () => {
+    try {
+      const [invoiceData, customerData] = await Promise.all([api.sales.invoices(), api.sales.customers()]);
         if (!Array.isArray(invoiceData) || !Array.isArray(customerData)) return;
         const customersById = Object.fromEntries(customerData.map((item) => [item.id, item]));
         const grouped = invoiceData.map((invoice) => {
@@ -30,8 +31,13 @@ const QuanLyCongNo = () => {
           };
         });
         if (grouped.length) setDebts(grouped);
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải công nợ');
+    }
+  };
+
+  useEffect(() => {
+    void Promise.resolve().then(loadDebts);
   }, []);
   const filteredDebts = debts.filter((item) => item.customer.toLowerCase().includes(search.toLowerCase()) || item.phone.includes(search));
 
@@ -40,14 +46,18 @@ const QuanLyCongNo = () => {
     if (!item) return;
     const remain = item.total - item.paid;
     if (remain <= 0) return;
-    await api.sales.createPayment({
-      id: `TT${Date.now().toString().slice(-5)}`,
-      invoiceId: id,
-      method: 'Tiền mặt',
-      amount: remain,
-      status: 'Đã thanh toán',
-    });
-    setDebts((current) => current.map((debt) => (debt.id === id ? { ...debt, paid: debt.total } : debt)));
+    try {
+      await api.sales.createPayment({
+        invoiceId: id,
+        method: 'Tiền mặt',
+        amount: remain,
+        status: 'Đã thanh toán',
+      });
+      await loadDebts();
+      notifySuccess('Đã ghi nhận thanh toán');
+    } catch (error) {
+      notifyError(error, 'Không thể ghi nhận thanh toán');
+    }
   };
 
   return (

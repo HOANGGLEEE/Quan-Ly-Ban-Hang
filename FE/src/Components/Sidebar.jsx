@@ -39,18 +39,17 @@ const Sidebar = ({ currentView, setView, user, onLogout }) => {
         </div>
       </div>
       <nav className="nav">
-        {menuItems.map((item, index) => (
-          <React.Fragment key={item.id}>
-            <a 
-              href="#!" 
-              className={currentView === item.id ? 'active' : ''} 
-              aria-current={currentView === item.id ? 'page' : undefined}
-              onClick={(e) => { e.preventDefault(); setView(item.id); }}
-            >
-              <item.icon className="menu-icon" />
-              {item.label}
-            </a>
-          </React.Fragment>
+        {menuItems.map((item) => (
+          <a
+            key={item.id}
+            href="#!"
+            className={currentView === item.id ? 'active' : ''}
+            aria-current={currentView === item.id ? 'page' : undefined}
+            onClick={(e) => { e.preventDefault(); setView(item.id); }}
+          >
+            <item.icon className="menu-icon" />
+            {item.label}
+          </a>
         ))}
       </nav>
       <div className="logout">

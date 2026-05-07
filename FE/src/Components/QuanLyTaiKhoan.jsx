@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const roles = {
   admin: 'Quản trị',
@@ -17,8 +18,17 @@ const QuanLyTaiKhoan = () => {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);
 
+  const loadAccounts = async () => {
+    try {
+      const data = await api.accounts.list();
+      if (Array.isArray(data)) setAccounts(data);
+    } catch (error) {
+      notifyError(error, 'Không thể tải tài khoản');
+    }
+  };
+
   useEffect(() => {
-    api.accounts.list().then((data) => Array.isArray(data) && setAccounts(data)).catch(() => {});
+    void Promise.resolve().then(loadAccounts);
   }, []);
 
   const filteredAccounts = useMemo(() => {
@@ -32,14 +42,26 @@ const QuanLyTaiKhoan = () => {
     event.preventDefault();
     const roleValue = { admin: 1, cashier: 2, warehouse: 3, accountant: 4 }[form.role] || Number(form.role) || 2;
     const payload = { MATAIKHOAN: form.id, USERNAME: form.username, PASS: form.password || form.PASS || '', QUYEN: roleValue };
-    if (accounts.some((item) => item.id === form.id)) await api.accounts.update(payload);
-    else await api.accounts.create(payload);
-    setAccounts((current) =>
-      current.some((item) => item.id === form.id)
-        ? current.map((item) => (item.id === form.id ? form : item))
-        : [...current, form],
-    );
-    setForm(null);
+    try {
+      const isEdit = accounts.some((item) => item.id === form.id);
+      if (isEdit) await api.accounts.update(payload);
+      else await api.accounts.create(payload);
+      await loadAccounts();
+      notifySuccess(isEdit ? 'Đã cập nhật tài khoản' : 'Đã thêm tài khoản');
+      setForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu tài khoản');
+    }
+  };
+
+  const removeAccount = async (id) => {
+    try {
+      await api.accounts.remove(id);
+      await loadAccounts();
+      notifySuccess('Đã xóa tài khoản');
+    } catch (error) {
+      notifyError(error, 'Không thể xóa tài khoản');
+    }
   };
 
   return (
@@ -68,7 +90,7 @@ const QuanLyTaiKhoan = () => {
                   <td>{roles[item.role] || item.role}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm({ ...item, password: '' })}>Sửa</button>
-                    <button className="btn danger" onClick={async () => { await api.accounts.remove(item.id); setAccounts(accounts.filter((x) => x.id !== item.id)); }}>Xóa</button>
+                    <button className="btn danger" onClick={() => removeAccount(item.id)}>Xóa</button>
                   </td>
                 </tr>
               ))}

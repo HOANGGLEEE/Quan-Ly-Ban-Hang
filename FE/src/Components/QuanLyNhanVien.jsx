@@ -1,27 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import { employees as seedEmployees } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const QuanLyNhanVien = () => {
   const [employees, setEmployees] = useState(seedEmployees);
   const [form, setForm] = useState(null);
 
+  const loadEmployees = async () => {
+    try {
+      const data = await api.employees.list();
+      if (Array.isArray(data)) setEmployees(data);
+    } catch (error) {
+      notifyError(error, 'Không thể tải nhân viên');
+    }
+  };
+
   useEffect(() => {
-    api.employees.list().then((data) => Array.isArray(data) && setEmployees(data)).catch(() => {});
+    void Promise.resolve().then(loadEmployees);
   }, []);
 
   const saveEmployee = async (event) => {
     event.preventDefault();
     const normalized = { ...form, address: form.address || '' };
     const payload = { MANV: normalized.id, TENNV: normalized.name, SDT: normalized.phone, DIACHI: normalized.address };
-    if (employees.some((item) => item.id === form.id)) await api.employees.update(payload);
-    else await api.employees.create(payload);
-    setEmployees((current) =>
-      current.some((item) => item.id === form.id)
-        ? current.map((item) => (item.id === form.id ? normalized : item))
-        : [...current, normalized],
-    );
-    setForm(null);
+    try {
+      const isEdit = employees.some((item) => item.id === form.id);
+      if (isEdit) await api.employees.update(payload);
+      else await api.employees.create(payload);
+      await loadEmployees();
+      notifySuccess(isEdit ? 'Đã cập nhật nhân viên' : 'Đã thêm nhân viên');
+      setForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu nhân viên');
+    }
+  };
+
+  const removeEmployee = async (id) => {
+    try {
+      await api.employees.remove(id);
+      await loadEmployees();
+      notifySuccess('Đã xóa nhân viên');
+    } catch (error) {
+      notifyError(error, 'Không thể xóa nhân viên');
+    }
   };
 
   return (
@@ -48,7 +70,7 @@ const QuanLyNhanVien = () => {
                   <td>{item.address}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm(item)}>Sửa</button>
-                    <button className="btn danger" onClick={async () => { await api.employees.remove(item.id); setEmployees(employees.filter((x) => x.id !== item.id)); }}>Xóa</button>
+                    <button className="btn danger" onClick={() => removeEmployee(item.id)}>Xóa</button>
                   </td>
                 </tr>
               ))}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const QuanLyKhuyenMai = () => {
   const [products, setProducts] = useState(seedProducts);
@@ -10,27 +11,44 @@ const QuanLyKhuyenMai = () => {
   ]);
   const [form, setForm] = useState(null);
 
-  useEffect(() => {
-    Promise.all([api.promotions.list(), api.products.list()])
-      .then(([promotionData, productData]) => {
+  const loadPromotions = async () => {
+    try {
+      const [promotionData, productData] = await Promise.all([api.promotions.list(), api.products.list()]);
         if (Array.isArray(promotionData)) setPromotions(promotionData.map((item) => ({ ...item, start: item.startDate?.slice?.(0, 10) || item.start, end: item.endDate?.slice?.(0, 10) || item.end })));
         if (Array.isArray(productData) && productData.length) setProducts(productData);
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải khuyến mãi');
+    }
+  };
+
+  useEffect(() => {
+    void Promise.resolve().then(loadPromotions);
   }, []);
 
   const savePromotion = async (event) => {
     event.preventDefault();
     const payload = { ...form };
     const dbPayload = { MAKM: payload.id, TENKM: payload.name, MASP: payload.productId, NGAYBATDAU: payload.start, NGAYKETTHUC: payload.end };
-    if (promotions.some((item) => item.id === payload.id)) await api.promotions.update(dbPayload);
-    else await api.promotions.create(dbPayload);
-    setPromotions((current) =>
-      current.some((item) => item.id === payload.id)
-        ? current.map((item) => (item.id === payload.id ? payload : item))
-        : [...current, payload],
-    );
-    setForm(null);
+    try {
+      const isEdit = promotions.some((item) => item.id === payload.id);
+      if (isEdit) await api.promotions.update(dbPayload);
+      else await api.promotions.create(dbPayload);
+      await loadPromotions();
+      notifySuccess(isEdit ? 'Đã cập nhật khuyến mãi' : 'Đã thêm khuyến mãi');
+      setForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu khuyến mãi');
+    }
+  };
+
+  const removePromotion = async (id) => {
+    try {
+      await api.promotions.remove(id);
+      await loadPromotions();
+      notifySuccess('Đã xóa khuyến mãi');
+    } catch (error) {
+      notifyError(error, 'Không thể xóa khuyến mãi');
+    }
   };
 
   return (
@@ -56,7 +74,7 @@ const QuanLyKhuyenMai = () => {
                   <td>{item.productId}</td>
                   <td>{item.start}</td>
                   <td>{item.end}</td>
-                  <td className="table-actions"><button className="btn secondary" onClick={() => setForm(item)}>Sửa</button><button className="btn danger" onClick={async () => { await api.promotions.remove(item.id); setPromotions(promotions.filter((x) => x.id !== item.id)); }}>Xóa</button></td>
+                  <td className="table-actions"><button className="btn secondary" onClick={() => setForm(item)}>Sửa</button><button className="btn danger" onClick={() => removePromotion(item.id)}>Xóa</button></td>
                 </tr>
               ))}
             </tbody>

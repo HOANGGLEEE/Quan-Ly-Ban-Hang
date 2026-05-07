@@ -59,6 +59,27 @@ const createOrder = async (req, res) => {
       const productId = item.productId || item.id;
       const quantity = Math.max(Number(item.quantity || 0), 1);
       const price = Number(item.price || 0);
+      if (!productId || quantity <= 0) {
+        const error = new Error("Thông tin sản phẩm trong đơn hàng không hợp lệ");
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const inventory = await new sql.Request(tx)
+        .input("maSP", productId)
+        .query("SELECT TENSP, ISNULL(SOLUONGTON, 0) AS SOLUONGTON FROM SANPHAM WITH (UPDLOCK, ROWLOCK) WHERE MASP = @maSP");
+      const product = inventory.recordset?.[0];
+      if (!product) {
+        const error = new Error(`Không tìm thấy sản phẩm ${productId}`);
+        error.statusCode = 400;
+        throw error;
+      }
+      if (Number(product.SOLUONGTON) < quantity) {
+        const error = new Error(`Sản phẩm ${product.TENSP || productId} chỉ còn ${product.SOLUONGTON} trong kho`);
+        error.statusCode = 400;
+        throw error;
+      }
+
       total += quantity * price;
 
       const detailReq = new sql.Request(tx);
@@ -94,7 +115,7 @@ const createOrder = async (req, res) => {
     ok(res, { orderId, shippingId, total }, "Đặt hàng thành công");
   } catch (err) {
     try { await tx.rollback(); } catch (_rollbackErr) {}
-    fail(res, 500, "Lỗi đặt hàng", err.message);
+    fail(res, err.statusCode || 500, "Lỗi đặt hàng", err.message);
   }
 };
 

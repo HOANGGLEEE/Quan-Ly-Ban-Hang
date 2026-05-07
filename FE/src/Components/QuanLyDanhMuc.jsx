@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { categories as seedCategories } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const QuanLyDanhMuc = () => {
   const [items, setItems] = useState(seedCategories);
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(null);
 
+  const loadCategories = async () => {
+    try {
+      const data = await api.categories.list();
+      if (Array.isArray(data)) setItems(data);
+    } catch (error) {
+      notifyError(error, 'Không thể tải danh mục');
+    }
+  };
+
   useEffect(() => {
-    api.categories.list().then((data) => Array.isArray(data) && setItems(data)).catch(() => {});
+    void Promise.resolve().then(loadCategories);
   }, []);
 
   const filteredItems = items.filter((item) =>
@@ -18,14 +28,26 @@ const QuanLyDanhMuc = () => {
   const saveCategory = async (event) => {
     event.preventDefault();
     const payload = { MADANHMUC: form.id, TENDANHMUC: form.name, MOTA: form.description };
-    if (items.some((item) => item.id === form.id)) await api.categories.update(payload);
-    else await api.categories.create(payload);
-    setItems((current) =>
-      current.some((item) => item.id === form.id)
-        ? current.map((item) => (item.id === form.id ? form : item))
-        : [...current, form],
-    );
-    setForm(null);
+    try {
+      const isEdit = items.some((item) => item.id === form.id);
+      if (isEdit) await api.categories.update(payload);
+      else await api.categories.create(payload);
+      await loadCategories();
+      notifySuccess(isEdit ? 'Đã cập nhật danh mục' : 'Đã thêm danh mục');
+      setForm(null);
+    } catch (error) {
+      notifyError(error, 'Không thể lưu danh mục');
+    }
+  };
+
+  const removeCategory = async (id) => {
+    try {
+      await api.categories.remove(id);
+      await loadCategories();
+      notifySuccess('Đã xóa danh mục');
+    } catch (error) {
+      notifyError(error, 'Không thể xóa danh mục');
+    }
   };
 
   return (
@@ -54,7 +76,7 @@ const QuanLyDanhMuc = () => {
                   <td>{item.description}</td>
                   <td className="table-actions">
                     <button className="btn secondary" onClick={() => setForm(item)}>Sửa</button>
-                    <button className="btn danger" onClick={async () => { await api.categories.remove(item.id); setItems(items.filter((x) => x.id !== item.id)); }}>Xóa</button>
+                    <button className="btn danger" onClick={() => removeCategory(item.id)}>Xóa</button>
                   </td>
                 </tr>
               ))}
