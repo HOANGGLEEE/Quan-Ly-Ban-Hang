@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { formatCurrency, invoices as seedInvoices } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError, notifySuccess } from '../utils/notifications';
 
 const XuLyDoiTra = () => {
   const [invoices, setInvoices] = useState(seedInvoices);
@@ -8,12 +9,24 @@ const XuLyDoiTra = () => {
   const [invoice, setInvoice] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [reason, setReason] = useState('Lỗi kỹ thuật');
+  const [returnType, setReturnType] = useState('Trả hàng');
   const [result, setResult] = useState(null);
+  const [returnHistory, setReturnHistory] = useState([]);
+
+  const loadReturnData = async () => {
+    try {
+      const [invoiceData, returnData] = await Promise.all([api.sales.invoices(), api.returns.list()]);
+      if (Array.isArray(invoiceData) && invoiceData.length) {
+        setInvoices(invoiceData.map((item) => ({ ...item, customer: item.customerId || item.customer || '', phone: item.phone || '', items: item.items || [] })));
+      }
+      if (Array.isArray(returnData)) setReturnHistory(returnData);
+    } catch (error) {
+      notifyError(error, 'Không thể tải dữ liệu đổi trả');
+    }
+  };
 
   useEffect(() => {
-    api.sales.invoices()
-      .then((data) => Array.isArray(data) && data.length && setInvoices(data.map((item) => ({ ...item, customer: item.customerId || item.customer || '', phone: item.phone || '', items: item.items || [] }))))
-      .catch(() => {});
+    void Promise.resolve().then(loadReturnData);
   }, []);
 
   const findInvoice = (event) => {
@@ -35,11 +48,29 @@ const XuLyDoiTra = () => {
     });
   };
 
-  const submitReturn = () => {
+  const submitReturn = async () => {
     const items = Object.values(selectedItems);
     if (items.length === 0) return;
-    const refund = items.reduce((sum, item) => sum + item.price * item.returnQuantity, 0);
-    setResult(`Đã tạo phiếu đổi/trả cho ${items.length} sản phẩm. Giá trị xử lý: ${formatCurrency(refund)}. Lý do: ${reason}.`);
+    try {
+      const payload = {
+        invoiceId: invoice.id,
+        reason,
+        type: returnType,
+        items: items.map((item) => ({
+          productId: item.productId,
+          quantity: item.returnQuantity,
+          price: item.price,
+        })),
+      };
+      const created = await api.returns.create(payload);
+      const refund = created?.total ?? items.reduce((sum, item) => sum + item.price * item.returnQuantity, 0);
+      await loadReturnData();
+      setSelectedItems({});
+      setResult(`Đã tạo phiếu ${returnType.toLowerCase()} cho ${items.length} sản phẩm. Giá trị xử lý: ${formatCurrency(refund)}. Lý do: ${reason}.`);
+      notifySuccess('Đã tạo phiếu đổi/trả và cập nhật tồn kho');
+    } catch (error) {
+      notifyError(error, 'Không thể tạo phiếu đổi/trả');
+    }
   };
 
   return (
@@ -79,6 +110,11 @@ const XuLyDoiTra = () => {
                 <option>Không đúng nhu cầu</option>
                 <option>Hàng giao thiếu phụ kiện</option>
               </select>
+              <select className="input" value={returnType} onChange={(e) => setReturnType(e.target.value)} style={{ maxWidth: 180 }}>
+                <option>Trả hàng</option>
+                <option>Đổi hàng</option>
+                <option>Bảo hành</option>
+              </select>
             </div>
             <div className="table-wrap" style={{ marginTop: 14 }}>
               <table>
@@ -105,6 +141,28 @@ const XuLyDoiTra = () => {
       )}
 
       {result && <section className="card"><strong>{result}</strong></section>}
+
+      <section className="card">
+        <h2 className="h2">Lịch sử đổi trả</h2>
+        <div className="table-wrap" style={{ marginTop: 14 }}>
+          <table>
+            <thead><tr><th>Mã phiếu</th><th>Hóa đơn</th><th>Sản phẩm</th><th>SL</th><th>Hình thức</th><th>Giá trị</th><th>Trạng thái</th></tr></thead>
+            <tbody>
+              {returnHistory.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.id}</td>
+                  <td>{item.invoiceId}</td>
+                  <td>{item.productName || item.productId}</td>
+                  <td>{item.quantity}</td>
+                  <td>{item.type}</td>
+                  <td>{formatCurrency(item.value)}</td>
+                  <td><span className="badge success">{item.status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 };

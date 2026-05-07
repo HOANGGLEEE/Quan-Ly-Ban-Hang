@@ -12,6 +12,7 @@ const quanLyNhapKhoRoutes = require("./routes/quanLyNhapKhoRoutes");
 const quanLySanPhamRoutes = require("./routes/quanLySanPhamRoutes");
 const quanLyTaiKhoanRoutes = require("./routes/quanLyTaiKhoanRoutes");
 const quanLyTonKhoRoutes = require("./routes/quanLyTonKhoRoutes");
+const quanLyBaoHanhRoutes = require("./routes/quanLyBaoHanhRoutes");
 const baoCaoThongKeRoutes = require("./routes/baoCaoThongKeRoutes");
 const cuaHangRoutes = require("./routes/cuaHangRoutes");
 
@@ -35,6 +36,7 @@ app.use("/api/QuanLyNhapKho", quanLyNhapKhoRoutes);
 app.use("/api/QuanLySanPham", quanLySanPhamRoutes);
 app.use("/api/QuanLyTaiKhoan", quanLyTaiKhoanRoutes);
 app.use("/api/QuanLyTonKho", quanLyTonKhoRoutes);
+app.use("/api/QuanLyBaoHanh", quanLyBaoHanhRoutes);
 app.use("/api/BaoCaoThongKe", baoCaoThongKeRoutes);
 app.use("/api/CuaHang", cuaHangRoutes);
 

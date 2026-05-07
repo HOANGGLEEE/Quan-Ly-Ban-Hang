@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Sidebar from './Components/Sidebar';
 import QuanLyBanHang from './Components/QuanLyBanHang';
 import BaoCaoThongKe from './Components/BaoCaoThongKe';
@@ -11,22 +11,28 @@ import QuanLyDanhMuc from './Components/QuanLyDanhMuc';
 import QuanLySanPham from './Components/QuanLySanPham';
 import QuanLyNhapKho from './Components/QuanLyNhapKho';
 import QuanLyCongNo from './Components/QuanLyCongNo';
+import QuanLyDonOnline from './Components/QuanLyDonOnline';
+import QuanLyBaoHanh from './Components/QuanLyBaoHanh';
+import { useAppStore } from './store/AppStoreCore';
 
 const App = () => {
-  const [user] = useState({ username: 'admin', role: 'admin' });
-  const [currentView, setCurrentView] = useState('san-pham');
+  const { state, setView, logout } = useAppStore();
+  const { user, currentView } = state;
 
   const handleLogout = () => {
+    logout();
     window.location.href = 'http://localhost:5174';
   };
 
   const renderMainContent = () => {
     switch (currentView) {
       case 'ban-hang': return <QuanLyBanHang />;
+      case 'don-online': return <QuanLyDonOnline />;
       case 'thong-ke': return <BaoCaoThongKe />;
       case 'tai-khoan': return <QuanLyTaiKhoan />;
       case 'cong-no': return <QuanLyCongNo />;
       case 'doi-tra': return <XuLyDoiTra />;
+      case 'bao-hanh': return <QuanLyBaoHanh />;
       case 'ton-kho': return <QuanLyTonKho />;
       case 'nhan-vien': return <QuanLyNhanVien />;
       case 'khuyen-mai': return <QuanLyKhuyenMai />;
@@ -39,7 +45,7 @@ const App = () => {
 
   return (
     <div className="app-shell">
-      <Sidebar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
+      <Sidebar currentView={currentView} setView={setView} user={user} onLogout={handleLogout} />
       <main className="main">
         {renderMainContent()}
       </main>

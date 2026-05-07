@@ -3,17 +3,26 @@ import { Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { formatCurrency, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
 import { notifyError, notifySuccess } from '../utils/notifications';
+import { useAppStore } from '../store/AppStoreCore';
 
 const defaultCustomer = { id: '', name: '', phone: '', address: '' };
 
 const CuaHangDienMayHL = ({ onLoginClick }) => {
   const [products, setProducts] = useState(seedProducts);
-  const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [customer, setCustomer] = useState(defaultCustomer);
   const [note, setNote] = useState('');
   const [result, setResult] = useState(null);
+  const {
+    state,
+    storeCartSubtotal,
+    addStoreCartItem,
+    updateStoreCartQuantity,
+    removeStoreCartItem,
+    clearStoreCart,
+  } = useAppStore();
+  const cart = state.storeCart;
 
   const loadStoreProducts = async () => {
     try {
@@ -42,30 +51,9 @@ const CuaHangDienMayHL = ({ onLoginClick }) => {
     });
   }, [products, search, category]);
 
-  const subtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    [cart],
-  );
-
   const addToCart = (product) => {
     setResult(null);
-    setCart((current) => {
-      const existed = current.find((item) => item.id === product.id);
-      if (existed) {
-        return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: Math.min(item.quantity + 1, product.stock || 1) } : item,
-        );
-      }
-      return [...current, { ...product, quantity: 1 }];
-    });
-  };
-
-  const updateQuantity = (id, quantity) => {
-    setCart((current) =>
-      current.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, Math.min(Number(quantity) || 1, item.stock || 1)) } : item,
-      ),
-    );
+    addStoreCartItem(product);
   };
 
   const submitOrder = async (event) => {
@@ -81,7 +69,7 @@ const CuaHangDienMayHL = ({ onLoginClick }) => {
       });
 
       setResult(order);
-      setCart([]);
+      clearStoreCart();
       await loadStoreProducts();
       notifySuccess('Đã tạo đơn hàng');
     } catch (error) {
@@ -144,14 +132,14 @@ const CuaHangDienMayHL = ({ onLoginClick }) => {
               {cart.map((item) => (
                 <div className="cart-row" key={item.id}>
                   <div><strong>{item.name}</strong><span>{formatCurrency(item.price)}</span></div>
-                  <input className="input" type="number" min="1" max={item.stock} value={item.quantity} onChange={(e) => updateQuantity(item.id, e.target.value)} />
-                  <button className="icon-btn delete" onClick={() => setCart(cart.filter((product) => product.id !== item.id))}><Trash2 size={16} /></button>
+                  <input className="input" type="number" min="1" max={item.stock} value={item.quantity} onChange={(e) => updateStoreCartQuantity(item.id, e.target.value)} />
+                  <button className="icon-btn delete" onClick={() => removeStoreCartItem(item.id)}><Trash2 size={16} /></button>
                 </div>
               ))}
             </div>
           )}
 
-          <div className="summary-line"><span>Tạm tính</span><strong>{formatCurrency(subtotal)}</strong></div>
+          <div className="summary-line"><span>Tạm tính</span><strong>{formatCurrency(storeCartSubtotal)}</strong></div>
 
           <form onSubmit={submitOrder}>
             <div className="form-grid single">

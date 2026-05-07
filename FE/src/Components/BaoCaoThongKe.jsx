@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { formatCurrency, invoices as seedInvoices, products as seedProducts } from '../data/mockData';
 import { api } from '../services/api';
+import { notifyError } from '../utils/notifications';
 
 const BaoCaoThongKe = () => {
   const [products, setProducts] = useState(seedProducts);
@@ -8,42 +9,44 @@ const BaoCaoThongKe = () => {
   const [fromDate, setFromDate] = useState('2026-04-01');
   const [toDate, setToDate] = useState('2026-04-30');
   const [reportType, setReportType] = useState('Doanh thu');
+  const [rows, setRows] = useState([]);
 
-  useEffect(() => {
-    Promise.all([api.products.list(), api.sales.invoices()])
-      .then(([productData, invoiceData]) => {
+  const loadSummary = async () => {
+    try {
+      const [productData, invoiceData] = await Promise.all([api.products.list(), api.sales.invoices()]);
         if (Array.isArray(productData)) setProducts(productData);
         if (Array.isArray(invoiceData)) setInvoices(invoiceData.map((item) => ({ ...item, date: item.date?.slice?.(0, 10) || item.date, items: item.items || [] })));
-      })
-      .catch(() => {});
+    } catch (error) {
+      notifyError(error, 'Không thể tải dữ liệu báo cáo');
+    }
+  };
+
+  const loadReport = useCallback(async () => {
+    try {
+      const params = { fromDate, toDate };
+      let data = [];
+      if (reportType === 'Doanh thu') data = await api.reports.revenue(params);
+      else if (reportType === 'Sản phẩm bán chạy') data = await api.reports.bestSelling(params);
+      else data = await api.reports.inventory();
+      setRows(Array.isArray(data) ? data : []);
+    } catch (error) {
+      notifyError(error, 'Không thể tải kết quả báo cáo');
+      setRows([]);
+    }
+  }, [fromDate, toDate, reportType]);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadSummary);
   }, []);
+
+  useEffect(() => {
+    void Promise.resolve().then(loadReport);
+  }, [loadReport]);
 
   const revenue = useMemo(
     () => invoices.reduce((sum, invoice) => sum + invoice.items.reduce((itemSum, item) => itemSum + item.price * item.quantity, 0), 0),
     [invoices],
   );
-
-  const rows = useMemo(() => {
-    if (reportType === 'Doanh thu') {
-      return invoices.map((invoice) => ({
-        label: invoice.date,
-        note: invoice.id,
-        value: invoice.items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-      }));
-    }
-    if (reportType === 'Sản phẩm bán chạy') {
-      return invoices.flatMap((invoice) => invoice.items).map((item) => ({
-        label: item.name,
-        note: item.productId,
-        value: item.quantity,
-      }));
-    }
-    return products.map((item) => ({
-      label: item.name,
-      note: item.id,
-      value: item.stock,
-    }));
-  }, [invoices, products, reportType]);
 
   return (
     <div className="page">
@@ -78,7 +81,7 @@ const BaoCaoThongKe = () => {
               {rows.map((item, index) => (
                 <tr key={`${item.note}-${index}`}>
                   <td>{index + 1}</td>
-                  <td>{item.label}</td>
+                  <td>{String(item.label || '').slice(0, 10)}</td>
                   <td>{item.note}</td>
                   <td>{reportType === 'Doanh thu' ? formatCurrency(item.value) : item.value}</td>
                 </tr>

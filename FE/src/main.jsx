@@ -4,10 +4,13 @@ import './style/index.css'
 import App from './App.jsx'
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { AppStoreProvider } from './store/AppStore.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AppStoreProvider>
+      <App />
+    </AppStoreProvider>
     <ToastContainer
             position="top-right"
             autoClose={1500}    

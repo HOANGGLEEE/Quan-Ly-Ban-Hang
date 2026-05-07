@@ -53,6 +53,8 @@ export const api = {
     createOrder: (data) => request('/CuaHang/orders', { method: 'POST', body: body(data) }),
     orders: () => request('/CuaHang/orders'),
     updateOrderStatus: (data) => request('/CuaHang/orders/status', { method: 'POST', body: body(data) }),
+    updateShipping: (data) => request('/CuaHang/orders/shipping', { method: 'POST', body: body(data) }),
+    cancelOrder: (data) => request('/CuaHang/orders/cancel', { method: 'POST', body: body(data) }),
   },
 
   employees: {
@@ -101,6 +103,23 @@ export const api = {
     createInvoice: (data) => request('/QuanLyBanHang/insert-hoadonban', { method: 'POST', body: body(data) }),
     createPayment: (data) => request('/QuanLyBanHang/insert-thanhtoan', { method: 'POST', body: body(data) }),
     invoices: () => request('/QuanLyBanHang/get-all-hoadonban'),
+  },
+
+  returns: {
+    list: () => request('/QuanLyDoiTra/get-all-doitra'),
+    create: (data) => request('/QuanLyDoiTra/create-doitra', { method: 'POST', body: body(data) }),
+  },
+
+  reports: {
+    revenue: (params) => request('/BaoCaoThongKe/revenue', { params }),
+    bestSelling: (params) => request('/BaoCaoThongKe/best-selling', { params }),
+    inventory: () => request('/BaoCaoThongKe/inventory'),
+  },
+
+  warranties: {
+    list: () => request('/QuanLyBaoHanh/get-all-baohanh'),
+    create: (data) => request('/QuanLyBaoHanh/create-baohanh', { method: 'POST', body: body(data) }),
+    updateStatus: (data) => request('/QuanLyBaoHanh/update-status-baohanh', { method: 'POST', body: body(data) }),
   },
 };
 

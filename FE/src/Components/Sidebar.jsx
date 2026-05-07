@@ -6,6 +6,7 @@ import {
   ClipboardList,
   FileText,
   HandCoins,
+  Headphones,
   Package,
   PackagePlus,
   ReceiptText,
@@ -13,21 +14,25 @@ import {
   ShieldCheck,
   Users,
 } from 'lucide-react';
+import { useAppStore } from '../store/AppStoreCore';
 
 const Sidebar = ({ currentView, setView, user, onLogout }) => {
-  const menuItems = [
-    { id: 'san-pham', label: 'Sản phẩm điện máy', icon: Package },
-    { id: 'danh-muc', label: 'Danh mục', icon: ClipboardList },
-    { id: 'ban-hang', label: 'Bán hàng', icon: ReceiptText },
-    { id: 'doi-tra', label: 'Đổi trả', icon: Repeat2 },
-    { id: 'nhap-kho', label: 'Nhập kho', icon: PackagePlus },
-    { id: 'ton-kho', label: 'Tồn kho', icon: Boxes },
-    { id: 'khuyen-mai', label: 'Khuyến mãi', icon: BadgePercent },
-    { id: 'cong-no', label: 'Công nợ khách hàng', icon: HandCoins },
-    { id: 'thong-ke', label: 'Báo cáo thống kê', icon: BarChart3 },
-    { id: 'nhan-vien', label: 'Nhân viên', icon: Users },
-    { id: 'tai-khoan', label: 'Tài khoản', icon: ShieldCheck },
-  ];
+  const { visibleMenuItems } = useAppStore();
+  const icons = {
+    'san-pham': Package,
+    'danh-muc': ClipboardList,
+    'ban-hang': ReceiptText,
+    'don-online': FileText,
+    'doi-tra': Repeat2,
+    'bao-hanh': Headphones,
+    'nhap-kho': PackagePlus,
+    'ton-kho': Boxes,
+    'khuyen-mai': BadgePercent,
+    'cong-no': HandCoins,
+    'thong-ke': BarChart3,
+    'nhan-vien': Users,
+    'tai-khoan': ShieldCheck,
+  };
 
   return (
     <aside className="sidebar">
@@ -39,7 +44,9 @@ const Sidebar = ({ currentView, setView, user, onLogout }) => {
         </div>
       </div>
       <nav className="nav">
-        {menuItems.map((item) => (
+        {visibleMenuItems.map((item) => {
+          const Icon = icons[item.id] || FileText;
+          return (
           <a
             key={item.id}
             href="#!"
@@ -47,10 +54,11 @@ const Sidebar = ({ currentView, setView, user, onLogout }) => {
             aria-current={currentView === item.id ? 'page' : undefined}
             onClick={(e) => { e.preventDefault(); setView(item.id); }}
           >
-            <item.icon className="menu-icon" />
+            <Icon className="menu-icon" />
             {item.label}
           </a>
-        ))}
+          );
+        })}
       </nav>
       <div className="logout">
         <a href="#!" onClick={(e) => e.preventDefault()}><FileText className="menu-icon" /> {user?.username || 'Phiên làm việc'}</a>

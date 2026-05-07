@@ -9,5 +9,8 @@ router.get("/get-all-phieunhapkho", c.getAllPhieuNhapKho);
 router.get("/get-all-chitietnhap", c.getAllChiTietNhap);
 router.get("/get-all-hoadonban", c.getAllHoaDon);
 router.get("/get-all-chitietban", c.getAllChiTietBan);
+router.get("/revenue", c.getRevenueReport);
+router.get("/best-selling", c.getBestSellingReport);
+router.get("/inventory", c.getInventoryReport);
 
 module.exports = router;

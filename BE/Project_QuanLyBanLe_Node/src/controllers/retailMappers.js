@@ -109,6 +109,36 @@ const mapThanhToan = (item) => ({
   status: trimValue(item.TRANGTHAI),
 });
 
+const mapDoiTra = (item) => ({
+  ...trimRow(item),
+  id: trimValue(item.MADOITRA),
+  invoiceId: trimValue(item.MAHDBAN),
+  productId: trimValue(item.MASP),
+  customerId: trimValue(item.MAKH),
+  quantity: Number(item.SOLUONG || 0),
+  reason: trimValue(item.LYDO),
+  type: trimValue(item.HINHTHUC),
+  value: Number(item.GIATRI || 0),
+  date: item.NGAYTAO,
+  status: trimValue(item.TRANGTHAI),
+  productName: trimValue(item.TENSP),
+});
+
+const mapBaoHanh = (item) => ({
+  ...trimRow(item),
+  id: trimValue(item.MABAOHANH),
+  productId: trimValue(item.MASP),
+  customerId: trimValue(item.MAKH),
+  invoiceId: trimValue(item.MAHDBAN),
+  startDate: item.NGAYBATDAU,
+  endDate: item.NGAYKETTHUC,
+  status: trimValue(item.TRANGTHAI),
+  note: trimValue(item.GHICHU),
+  productName: trimValue(item.TENSP),
+  customerName: trimValue(item.TENKH),
+  phone: trimValue(item.SDT),
+});
+
 const mapPhieuNhap = (item) => ({
   ...trimRow(item),
   id: trimValue(item.MAPHIEUNHAP),
@@ -139,6 +169,8 @@ module.exports = {
   mapHoaDon,
   mapChiTietBan,
   mapThanhToan,
+  mapDoiTra,
+  mapBaoHanh,
   mapPhieuNhap,
   mapChiTietNhap,
 };
