@@ -40,7 +40,7 @@ const QuanLyTaiKhoan = () => {
 
   const saveAccount = async (event) => {
     event.preventDefault();
-    const roleValue = { admin: 1, cashier: 2, warehouse: 3, accountant: 4 }[form.role] || Number(form.role) || 2;
+    const roleValue = { accountant: 1, cashier: 2, warehouse: 3, admin: 4 }[form.role] || Number(form.role) || 2;
     const payload = { MATAIKHOAN: form.id, USERNAME: form.username, PASS: form.password || form.PASS || '', QUYEN: roleValue };
     try {
       const isEdit = accounts.some((item) => item.id === form.id);

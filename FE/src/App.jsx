@@ -13,15 +13,15 @@ import QuanLyNhapKho from './Components/QuanLyNhapKho';
 import QuanLyCongNo from './Components/QuanLyCongNo';
 import QuanLyDonOnline from './Components/QuanLyDonOnline';
 import QuanLyBaoHanh from './Components/QuanLyBaoHanh';
+import Login from './Components/Login';
 import { useAppStore } from './store/AppStoreCore';
 
 const App = () => {
-  const { state, setView, logout } = useAppStore();
+  const { state, setView, login, logout } = useAppStore();
   const { user, currentView } = state;
 
   const handleLogout = () => {
     logout();
-    window.location.href = 'http://localhost:5174';
   };
 
   const renderMainContent = () => {
@@ -42,6 +42,10 @@ const App = () => {
       default: return <QuanLyBanHang />;
     }
   };
+
+  if (!user) {
+    return <Login onLogin={login} />;
+  }
 
   return (
     <div className="app-shell">

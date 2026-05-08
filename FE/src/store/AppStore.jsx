@@ -3,12 +3,27 @@ import {
   AppStoreContext,
   appReducer,
   getAllowedViews,
+  getDefaultView,
   initialAppState,
   menuItems,
+  normalizeUser,
 } from './AppStoreCore';
 
+const SESSION_KEY = 'qlbl_user';
+
+const loadInitialState = () => {
+  try {
+    const savedUser = normalizeUser(JSON.parse(localStorage.getItem(SESSION_KEY)));
+    if (!savedUser) return initialAppState;
+    return { ...initialAppState, user: savedUser, currentView: getDefaultView(savedUser.role) };
+  } catch {
+    localStorage.removeItem(SESSION_KEY);
+    return initialAppState;
+  }
+};
+
 export const AppStoreProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(appReducer, initialAppState);
+  const [state, dispatch] = useReducer(appReducer, initialAppState, loadInitialState);
 
   const value = useMemo(() => {
     const allowedViews = getAllowedViews(state.user?.role);
@@ -20,8 +35,15 @@ export const AppStoreProvider = ({ children }) => {
       allowedViews,
       visibleMenuItems,
       storeCartSubtotal,
-      login: (user) => dispatch({ type: 'login', payload: user }),
-      logout: () => dispatch({ type: 'logout' }),
+      login: (user) => {
+        const normalizedUser = normalizeUser(user);
+        if (normalizedUser) localStorage.setItem(SESSION_KEY, JSON.stringify(normalizedUser));
+        dispatch({ type: 'login', payload: normalizedUser });
+      },
+      logout: () => {
+        localStorage.removeItem(SESSION_KEY);
+        dispatch({ type: 'logout' });
+      },
       setView: (view) => dispatch({ type: 'setView', payload: view }),
       addStoreCartItem: (product) => dispatch({ type: 'addStoreCartItem', payload: product }),
       updateStoreCartQuantity: (id, quantity) => dispatch({ type: 'updateStoreCartQuantity', payload: { id, quantity } }),

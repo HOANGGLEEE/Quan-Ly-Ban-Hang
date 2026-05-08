@@ -7,6 +7,13 @@ export const roles = {
   accountant: 'Kế toán',
 };
 
+export const roleCodeMap = {
+  1: 'accountant',
+  2: 'cashier',
+  3: 'warehouse',
+  4: 'admin',
+};
+
 export const rolePermissions = {
   admin: ['san-pham', 'danh-muc', 'ban-hang', 'don-online', 'doi-tra', 'bao-hanh', 'nhap-kho', 'ton-kho', 'khuyen-mai', 'cong-no', 'thong-ke', 'nhan-vien', 'tai-khoan'],
   cashier: ['ban-hang', 'don-online', 'doi-tra', 'bao-hanh'],
@@ -33,12 +40,25 @@ export const menuItems = [
 export const defaultUser = { username: 'admin', role: 'admin' };
 
 export const initialAppState = {
-  user: defaultUser,
+  user: null,
   currentView: 'san-pham',
   storeCart: [],
 };
 
-export const normalizeRole = (role) => rolePermissions[role] ? role : 'cashier';
+export const normalizeRole = (role) => {
+  const normalizedRole = roleCodeMap[role] || String(role || '').trim().toLowerCase();
+  return rolePermissions[normalizedRole] ? normalizedRole : 'cashier';
+};
+
+export const normalizeUser = (user) => {
+  if (!user) return null;
+  return {
+    ...user,
+    username: String(user.username || user.USERNAME || '').trim(),
+    id: String(user.id || user.MATAIKHOAN || '').trim(),
+    role: normalizeRole(user.role ?? user.QUYEN),
+  };
+};
 
 export const getAllowedViews = (role) => rolePermissions[normalizeRole(role)] || rolePermissions.cashier;
 
@@ -49,7 +69,7 @@ const clampQuantity = (quantity, stock) => Math.max(1, Math.min(Number(quantity)
 export const appReducer = (state, action) => {
   switch (action.type) {
     case 'login': {
-      const user = action.payload || defaultUser;
+      const user = normalizeUser(action.payload) || defaultUser;
       return { ...state, user, currentView: getDefaultView(user.role), storeCart: [] };
     }
     case 'logout':
